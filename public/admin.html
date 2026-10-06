@@ -15,19 +15,74 @@
   input,textarea{font:inherit;font-size:11px;color:var(--fg);background:var(--bg);border:1.5px solid var(--fg);padding:10px;width:100%}
   textarea{resize:vertical}
 
-  header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;max-width:1000px;margin:0 auto}
-  header img{width:44px;height:44px;object-fit:contain}
+  /* Top bar: brand name left, logo right */
+  header{display:flex;align-items:center;gap:16px;padding:14px 24px;border-bottom:1.5px solid var(--fg);position:sticky;top:0;background:var(--bg);z-index:10}
+  header .brand{font-size:22px;font-weight:800;letter-spacing:.06em;flex:1;white-space:nowrap}
+  header img{width:48px;height:48px;object-fit:contain}
   header a{font-size:9px;font-weight:600;color:var(--muted);text-decoration:none}
-  nav{display:flex;justify-content:center;gap:24px;padding:8px 16px 20px}
-  nav button{font-size:12px;font-weight:600;color:var(--muted);padding-bottom:4px;border-bottom:2px solid transparent}
-  nav button.on{color:var(--fg);border-color:var(--fg)}
-  nav b{display:inline-grid;place-items:center;min-width:16px;height:16px;margin-left:4px;border-radius:8px;background:var(--red);color:#fff;font-size:8px;vertical-align:2px}
+
+  /* Sidebar + content */
+  .layout{display:grid;grid-template-columns:200px minmax(0,1fr);min-height:calc(100vh - 78px)}
+  .side{border-right:1.5px solid var(--fg)}
+  nav{display:flex;flex-direction:column;position:sticky;top:78px}
+  nav button{text-align:left;font-size:12px;font-weight:600;padding:14px 20px;border-bottom:1px solid var(--line);color:var(--muted);display:flex;align-items:center;gap:6px}
+  nav button:hover{background:#f6f6f6;color:var(--fg)}
+  nav button.on{background:var(--fg);color:var(--bg)}
+  nav b{display:inline-grid;place-items:center;min-width:16px;height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:8px;margin-left:auto}
+  @media (max-width:800px){
+    header{padding:10px 16px}
+    header .brand{font-size:16px}
+    header img{width:36px;height:36px}
+    .layout{grid-template-columns:minmax(0,1fr)}
+    .side{border-right:0;border-bottom:1.5px solid var(--fg)}
+    nav{flex-direction:row;overflow-x:auto;position:static}
+    nav button{border-bottom:0;padding:12px 14px;white-space:nowrap;font-size:11px}
+    nav b{margin-left:4px}
+  }
+
+  /* Dashboard */
+  .dash h1{font-size:14px;font-weight:800;margin-bottom:16px}
+  .tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px}
+  @media (max-width:1000px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .tile{border:1.5px solid var(--fg);padding:16px;text-align:left;display:block;width:100%}
+  .tile:hover{background:#f6f6f6}
+  .tile span{display:block;font-size:9px;color:var(--muted);font-weight:600}
+  .tile b{display:block;font-size:20px;font-weight:800;margin:6px 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tile small{font-size:9px;color:var(--muted)}
+  .tile.alert b{color:var(--red)}
+  .panel{border:1.5px solid var(--fg);padding:16px;margin-bottom:20px}
+  .panel h2{font-size:11px;font-weight:800;margin-bottom:12px;display:flex;justify-content:space-between;align-items:baseline}
+  .panel h2 small{font-weight:600;color:var(--muted);font-size:9px}
+  .chart{position:relative}
+  .chart svg{display:block;width:100%;height:auto;overflow:visible}
+  .chart .tip{position:absolute;pointer-events:none;background:var(--fg);color:var(--bg);font-size:9px;padding:6px 8px;white-space:nowrap;transform:translate(-50%,-110%);display:none}
+  .chart details{margin-top:8px;font-size:9px;color:var(--muted)}
+  .chart table{width:100%;border-collapse:collapse;margin-top:6px}
+  .chart td{padding:2px 4px;border-bottom:1px solid var(--line)}
+  .cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+  @media (max-width:1000px){.cols{grid-template-columns:minmax(0,1fr)}}
+  .cols .panel{margin-bottom:0}
+  .li{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:10px}
+  .li:last-child{border-bottom:0}
+  .li .th{width:36px;height:36px;flex:none;display:grid;place-items:center}
+  .li .th img,.li .th svg{width:100%;height:100%;object-fit:contain}
+  .li .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .li .bar{height:4px;background:var(--fg);border-radius:0 4px 4px 0;margin-top:4px}
+  .li .num{font-weight:800;white-space:nowrap}
+  .li .num.red{color:var(--red)}
+  .li.click{cursor:pointer}
+  .li.click:hover{background:#f6f6f6}
+  .pill{font-size:8px;font-weight:800;padding:2px 6px;border:1.5px solid currentColor;white-space:nowrap}
+  .pill.new{color:var(--red)}
+  .pill.paid{color:var(--fg)}
+  .pill.shipped,.pill.cancelled{color:var(--muted)}
 
   .logout{font-size:9px;font-weight:600;color:var(--muted);margin-left:12px}
   .login{max-width:300px;margin:60px auto;display:grid;gap:8px}
   [hidden]{display:none !important}
   .btn:disabled{opacity:.6}
-  main{max-width:1000px;margin:0 auto;padding:0 16px 60px}
+  main{padding:24px 24px 60px;max-width:1100px;width:100%}
+  @media (max-width:800px){main{padding:16px 16px 60px}}
 
   /* Products: same grid feel as the shop */
   .grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:16px 10px}
@@ -109,11 +164,10 @@
 <body>
 
 <header>
-  <img src="logo.png" alt="">
-  <span>
-    <a href="/" target="_blank">Сайт үзэх ↗</a>
-    <button id="logout" class="logout" hidden>Гарах</button>
-  </span>
+  <div class="brand">КОРСЕЛ.МН</div>
+  <a href="/" target="_blank">Сайт үзэх ↗</a>
+  <button id="logout" class="logout" hidden>Гарах</button>
+  <img src="logo.png" alt="Logo">
 </header>
 
 <form class="login" id="login" hidden>
@@ -122,13 +176,16 @@
   <button class="btn dark">Нэвтрэх</button>
 </form>
 
-<div id="panel" hidden>
-  <nav>
-    <button data-tab="products" class="on">Бараа</button>
-    <button data-tab="orders">Захиалга<span id="badge"></span></button>
-    <button data-tab="coupons">Купон</button>
-    <button data-tab="settings">Тохиргоо</button>
-  </nav>
+<div id="panel" class="layout" hidden>
+  <aside class="side">
+    <nav>
+      <button data-tab="dashboard" class="on">Dashboard</button>
+      <button data-tab="products">Бараа</button>
+      <button data-tab="orders">Захиалга<span id="badge"></span></button>
+      <button data-tab="coupons">Купон</button>
+      <button data-tab="settings">Тохиргоо</button>
+    </nav>
+  </aside>
   <main id="app"></main>
 </div>
 
@@ -139,7 +196,7 @@
 <script src="data.js"></script>
 <script>
 let products = [], orders = [], coupons = [];
-let tab = "products";
+let tab = "dashboard";
 const $app = document.getElementById("app");
 const shade = document.getElementById("shade");
 
@@ -391,12 +448,133 @@ function renderCoupons(){
   });
 }
 
+/* ---------- Dashboard ---------- */
+const DAY = 864e5;
+const dayKey = d => { d = new Date(d); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
+const shortDate = d => `${d.getMonth() + 1}/${d.getDate()}`;
+
+function renderDashboard(){
+  const now = new Date();
+  const live = orders.filter(o => o.status !== "cancelled");
+  const earned = live.filter(o => o.status === "paid" || o.status === "shipped");   // money actually received
+  const thisMonth = o => { const d = new Date(o.createdAt); return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); };
+  const sum = list => list.reduce((a, o) => a + o.total, 0);
+  const waiting = orders.filter(o => o.status === "new");
+  const toShip = orders.filter(o => o.status === "paid");
+
+  // Revenue per day, last 30 days
+  const byDay = {};
+  earned.forEach(o => { const k = dayKey(o.createdAt); byDay[k] = (byDay[k] || 0) + o.total; });
+  const days = [];
+  for (let i = 29; i >= 0; i--) { const d = new Date(now - i * DAY); days.push({ d, v: byDay[dayKey(d)] || 0 }); }
+
+  // Low stock (tracked sizes with 3 or fewer left)
+  const low = [];
+  products.forEach(p => sizesOf(p).forEach(sz => { const n = p.stock[sz]; if (Number.isInteger(n) && n <= 3) low.push({ p, sz, n }); }));
+  low.sort((a, b) => a.n - b.n);
+
+  // Best sellers by quantity
+  const sold = {};
+  live.forEach(o => o.items.forEach(i => {
+    const r = sold[i.id] || (sold[i.id] = { id: i.id, name: i.name, qty: 0, sum: 0 });
+    r.qty += i.qty; r.sum += i.qty * i.price;
+  }));
+  const top = Object.values(sold).sort((a, b) => b.qty - a.qty).slice(0, 5);
+  const topMax = Math.max(1, ...top.map(t => t.qty));
+  const thumb = id => { const p = products.find(x => x.id === id); return p ? art(p) : ""; };
+
+  $app.innerHTML = `<div class="dash">
+    <div class="tiles">
+      <button class="tile" data-go="orders"><span>Энэ сарын орлого</span><b>${fmt(sum(earned.filter(thisMonth)))}</b><small>Төлбөр орсон захиалгаар</small></button>
+      <button class="tile" data-go="orders"><span>Энэ сарын захиалга</span><b>${live.filter(thisMonth).length}</b><small>Нийт ${live.length} захиалга</small></button>
+      <button class="tile${waiting.length ? " alert" : ""}" data-go="orders"><span>Төлбөр хүлээгдэж буй</span><b>${waiting.length}</b><small>${fmt(sum(waiting))}</small></button>
+      <button class="tile${toShip.length ? " alert" : ""}" data-go="orders"><span>Илгээх ёстой</span><b>${toShip.length}</b><small>Төлбөр орсон, хүргээгүй</small></button>
+    </div>
+
+    <div class="panel">
+      <h2>Сүүлийн 30 хоногийн орлого <small>Нийт ${fmt(days.reduce((a, x) => a + x.v, 0))}</small></h2>
+      <div class="chart" id="chart"></div>
+    </div>
+
+    <div class="cols">
+      <div class="panel">
+        <h2>Их зарагдсан бараа</h2>
+        ${top.length ? top.map(t => `<div class="li"><div class="th">${thumb(t.id)}</div>
+          <div class="nm">${esc(t.name)}<div class="bar" style="width:${Math.max(4, t.qty / topMax * 100)}%"></div></div>
+          <div class="num">${t.qty} ш</div></div>`).join("") : `<div class="empty" style="padding:24px 0">Борлуулалт алга</div>`}
+      </div>
+      <div class="panel">
+        <h2>Үлдэгдэл багассан <small>3 ба түүнээс доош</small></h2>
+        ${low.length ? low.slice(0, 8).map(l => `<div class="li click" data-edit="${l.p.id}"><div class="th">${art(l.p)}</div>
+          <div class="nm">${esc(l.p.name)} <span style="color:var(--muted)">(${esc(l.sz)})</span></div>
+          <div class="num${l.n === 0 ? " red" : ""}">${l.n === 0 ? "Дууссан" : l.n + " ш"}</div></div>`).join("") : `<div class="empty" style="padding:24px 0">Бүх бараа хангалттай</div>`}
+      </div>
+    </div>
+
+    <div class="panel" style="margin-top:20px">
+      <h2>Сүүлийн захиалгууд</h2>
+      ${orders.length ? orders.slice(0, 6).map(o => `<div class="li click" data-go="orders">
+        <div class="num" style="width:44px">#${o.id}</div>
+        <div class="nm">${esc(o.name)} <span style="color:var(--muted)">· ${new Date(o.createdAt).toLocaleDateString("mn-MN")}</span></div>
+        <span class="pill ${o.status}">${STATUS[o.status]}</span>
+        <div class="num" style="min-width:90px;text-align:right">${fmt(o.total)}</div></div>`).join("") : `<div class="empty" style="padding:24px 0">Захиалга алга</div>`}
+    </div>
+  </div>`;
+
+  drawRevenueChart(document.getElementById("chart"), days);
+  $app.querySelectorAll("[data-go]").forEach(b => b.onclick = () => { tab = b.dataset.go; render(); });
+  $app.querySelectorAll("[data-edit]").forEach(b => b.onclick = () => openEditor(products.find(p => p.id == b.dataset.edit)));
+}
+
+// Single-series area chart with a crosshair tooltip; no library needed.
+function drawRevenueChart(el, days){
+  // Drawn at the real pixel width so axis text keeps its size on phones.
+  const W = Math.max(300, Math.round(el.clientWidth) || 900), H = W < 500 ? 180 : 240, L = 56, R = 8, T = 10, B = 24;
+  const raw = Math.max(...days.map(d => d.v));
+  const step = raw > 0 ? Math.pow(10, Math.floor(Math.log10(raw))) : 1;
+  const max = raw > 0 ? Math.ceil(raw / step) * step : 100000;
+  const x = i => L + i * (W - L - R) / (days.length - 1);
+  const y = v => T + (1 - v / max) * (H - T - B);
+  const short = v => v >= 1e6 ? (v / 1e6).toFixed(v % 1e6 ? 1 : 0) + "сая" : v >= 1e3 ? Math.round(v / 1e3) + "мян" : String(v);
+  const pts = days.map((d, i) => `${x(i).toFixed(1)},${y(d.v).toFixed(1)}`).join(" ");
+  const grid = [0, .5, 1].map(f => `<line x1="${L}" x2="${W - R}" y1="${y(max * f)}" y2="${y(max * f)}" stroke="#e6e6e6"/>
+    <text x="${L - 8}" y="${y(max * f) + 3}" text-anchor="end" font-size="9" fill="#6b6b6b">${short(max * f)}</text>`).join("");
+  const xl = [0, 14, 29].map(i => `<text x="${x(i)}" y="${H - 6}" text-anchor="${i === 0 ? "start" : i === 29 ? "end" : "middle"}" font-size="9" fill="#6b6b6b">${shortDate(days[i].d)}</text>`).join("");
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Сүүлийн 30 хоногийн өдөр тутмын орлого">
+      ${grid}${xl}
+      <polygon points="${x(0)},${y(0)} ${pts} ${x(days.length - 1)},${y(0)}" fill="#c51811" fill-opacity=".08"/>
+      <polyline points="${pts}" fill="none" stroke="#c51811" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      <line id="cx" y1="${T}" y2="${H - B}" stroke="#000" stroke-width="1" visibility="hidden"/>
+      <circle id="cd" r="4.5" fill="#c51811" stroke="#fff" stroke-width="2" visibility="hidden"/>
+      <rect id="hit" x="${L}" y="0" width="${W - L - R}" height="${H}" fill="transparent"/>
+    </svg>
+    <div class="tip" id="tip"></div>
+    <details><summary>Хүснэгтээр харах</summary><table>${days.filter(d => d.v).map(d => `<tr><td>${shortDate(d.d)}</td><td style="text-align:right">${fmt(d.v)}</td></tr>`).join("") || "<tr><td>Орлого алга</td></tr>"}</table></details>`;
+  const svg = el.querySelector("svg"), tip = el.querySelector("#tip"), cx = el.querySelector("#cx"), cd = el.querySelector("#cd");
+  const move = e => {
+    const r = svg.getBoundingClientRect();
+    const px = ((e.touches ? e.touches[0].clientX : e.clientX) - r.left) / r.width * W;
+    const i = Math.max(0, Math.min(days.length - 1, Math.round((px - L) / (W - L - R) * (days.length - 1))));
+    const d = days[i];
+    cx.setAttribute("x1", x(i)); cx.setAttribute("x2", x(i)); cd.setAttribute("cx", x(i)); cd.setAttribute("cy", y(d.v));
+    [cx, cd].forEach(n => n.setAttribute("visibility", "visible"));
+    tip.style.display = "block";
+    tip.style.left = (x(i) / W * r.width) + "px"; tip.style.top = (y(d.v) / H * r.height) + "px";
+    tip.innerHTML = `${shortDate(d.d)} · <b>${fmt(d.v)}</b>`;
+  };
+  const hide = () => { tip.style.display = "none"; [cx, cd].forEach(n => n.setAttribute("visibility", "hidden")); };
+  const hit = el.querySelector("#hit");
+  hit.addEventListener("mousemove", move); hit.addEventListener("touchmove", move, { passive: true });
+  hit.addEventListener("mouseleave", hide); hit.addEventListener("touchend", hide);
+}
+
 /* ---------- Tabs ---------- */
 function render(){
   const fresh = orders.filter(o => o.status === "new").length;
   document.getElementById("badge").innerHTML = fresh ? `<b>${fresh}</b>` : "";
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
-  ({ products: renderProducts, orders: renderOrders, coupons: renderCoupons, settings: renderSettings })[tab]();
+  ({ dashboard: renderDashboard, products: renderProducts, orders: renderOrders, coupons: renderCoupons, settings: renderSettings })[tab]();
+  window.scrollTo(0, 0);
 }
 document.querySelectorAll("nav button").forEach(b => b.onclick = () => { tab = b.dataset.tab; render(); });
 
