@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="mn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CORSEL Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#fff; --fg:#000; --muted:#6b6b6b; --red:#c51811; --line:#e6e6e6; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--fg)}
+  body{font-family:"Unbounded",Arial,sans-serif;font-size:11px;line-height:1.5}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  input,textarea{font:inherit;font-size:11px;color:var(--fg);background:var(--bg);border:1.5px solid var(--fg);padding:10px;width:100%}
+  textarea{resize:vertical}
+
+  header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;max-width:1000px;margin:0 auto}
+  header img{width:44px;height:44px;object-fit:contain}
+  header a{font-size:9px;font-weight:600;color:var(--muted);text-decoration:none}
+  nav{display:flex;justify-content:center;gap:24px;padding:8px 16px 20px}
+  nav button{font-size:12px;font-weight:600;color:var(--muted);padding-bottom:4px;border-bottom:2px solid transparent}
+  nav button.on{color:var(--fg);border-color:var(--fg)}
+  nav b{display:inline-grid;place-items:center;min-width:16px;height:16px;margin-left:4px;border-radius:8px;background:var(--red);color:#fff;font-size:8px;vertical-align:2px}
+
+  .logout{font-size:9px;font-weight:600;color:var(--muted);margin-left:12px}
+  .login{max-width:300px;margin:60px auto;display:grid;gap:8px}
+  [hidden]{display:none !important}
+  .btn:disabled{opacity:.6}
+  main{max-width:1000px;margin:0 auto;padding:0 16px 60px}
+
+  /* Products: same grid feel as the shop */
+  .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px 10px}
+  @media (max-width:800px){.grid{grid-template-columns:repeat(3,1fr)}}
+  .card{text-align:center;font-size:9px;cursor:pointer}
+  .card .pic{aspect-ratio:1/1;display:grid;place-items:center;position:relative;border:1.5px solid transparent}
+  .card:hover .pic{border-color:var(--fg)}
+  .card .pic svg,.card .pic img{width:80%;height:80%;object-fit:contain}
+  .card.sold .pic svg,.card.sold .pic img{filter:blur(3px);opacity:.8}
+  .card.sold .pic::after{content:"SOLD OUT";position:absolute;font-size:8px;font-weight:800;color:var(--red)}
+  .card .nm{font-weight:600;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card .pr{color:var(--muted)}
+  .add .pic{border:1.5px dashed var(--fg);font-size:28px;font-weight:400}
+
+  /* Editor */
+  .shade{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:20;overflow:auto;padding:24px 16px}
+  .shade.open{display:block}
+  .box{background:var(--bg);max-width:420px;margin:0 auto;padding:20px;border:1.5px solid var(--fg)}
+  .box h2{font-size:12px;font-weight:800;margin-bottom:14px;display:flex;justify-content:space-between}
+  .photo{width:200px;max-width:100%;margin-left:auto;margin-right:auto;aspect-ratio:1/1;border:1.5px dashed var(--fg);display:grid;place-items:center;cursor:pointer;margin-bottom:12px;color:var(--muted);font-size:10px;text-align:center}
+  .photo svg,.photo img{width:80%;height:80%;object-fit:contain}
+  label.t{display:block;font-size:9px;font-weight:600;margin:10px 0 4px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .check{display:flex;gap:8px;align-items:center;margin:14px 0;font-size:10px;cursor:pointer}
+  .check input{width:18px;height:18px;accent-color:var(--red)}
+  .btns{display:flex;gap:8px}
+  .btn{flex:1;height:42px;font-size:10px;font-weight:800;border:1.5px solid var(--fg)}
+  .btn.dark{background:var(--fg);color:var(--bg)}
+  .btn.red{flex:0 0 auto;padding:0 14px;border-color:var(--red);color:var(--red)}
+
+  /* Orders */
+  .order{border:1.5px solid var(--fg);padding:14px;margin-bottom:10px;font-size:10px}
+  .order.done{border-color:var(--line);color:var(--muted)}
+  .order .who{font-weight:600;font-size:11px}
+  .order .who a{color:inherit}
+  .order ul{list-style:none;margin:8px 0;padding:8px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .order li{display:flex;justify-content:space-between}
+  .order .foot{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .order .foot b{font-size:12px}
+  .order .foot button{padding:7px 12px;font-size:9px;font-weight:800;border:1.5px solid var(--fg)}
+  .order.done .foot button.ok{background:none}
+  .order .foot button.ok{background:var(--fg);color:var(--bg)}
+  .order .foot .x{border-color:var(--red);color:var(--red)}
+  .cform{display:grid;grid-template-columns:1fr 80px 100px;gap:8px;max-width:480px;margin:0 auto 16px}
+  .cform input{text-transform:uppercase}
+  .crow{display:grid;grid-template-columns:1fr auto auto auto;gap:12px;align-items:center;max-width:480px;margin:0 auto;padding:10px 0;border-bottom:1px solid var(--line);font-size:11px}
+  .crow b{font-weight:800;letter-spacing:.04em}
+  .crow span{color:var(--red);font-weight:600}
+  .crow button{padding:6px 10px;font-size:9px;font-weight:800;border:1.5px solid var(--fg)}
+  .crow button.x{border-color:var(--red);color:var(--red)}
+  .crow.off{color:var(--muted)}
+  .crow.off span{color:var(--muted)}
+  .empty{padding:60px 0;text-align:center;color:var(--muted)}
+
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--fg);color:var(--bg);padding:10px 16px;font-size:9px;font-weight:600;transition:.25s;pointer-events:none;z-index:30}
+  .toast.show{opacity:1;transform:translateX(-50%)}
+  .toast.err{background:var(--red)}
+</style>
+</head>
+<body>
+
+<header>
+  <img src="logo.png" alt="">
+  <span>
+    <a href="/" target="_blank">Сайт үзэх ↗</a>
+    <button id="logout" class="logout" hidden>Гарах</button>
+  </span>
+</header>
+
+<form class="login" id="login" hidden>
+  <label class="t">Админ нууц үг</label>
+  <input type="password" name="password" required autocomplete="current-password">
+  <button class="btn dark">Нэвтрэх</button>
+</form>
+
+<div id="panel" hidden>
+  <nav>
+    <button data-tab="products" class="on">Бараа</button>
+    <button data-tab="orders">Захиалга<span id="badge"></span></button>
+    <button data-tab="coupons">Купон</button>
+  </nav>
+  <main id="app"></main>
+</div>
+
+<div class="shade" id="shade"></div>
+<input type="file" id="file" accept="image/*" hidden>
+<div class="toast" id="toast"></div>
+
+<script src="data.js"></script>
+<script>
+let products = [], orders = [], coupons = [];
+let tab = "products";
+const $app = document.getElementById("app");
+const shade = document.getElementById("shade");
+
+function toast(msg, err){
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.toggle("err", !!err); t.classList.add("show");
+  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2200);
+}
+// Runs an API call; on 401 drops back to the login screen.
+async function call(path, opts){
+  try { return await api(path, opts); }
+  catch (e) { if (e.status === 401) showLogin(); else toast(e.message, true); throw e; }
+}
+
+/* ---------- Нэвтрэх ---------- */
+function showLogin(){
+  document.getElementById("panel").hidden = true;
+  document.getElementById("logout").hidden = true;
+  document.getElementById("login").hidden = false;
+  closeEditor();
+}
+document.getElementById("login").onsubmit = async e => {
+  e.preventDefault();
+  try {
+    await api("login", { method: "POST", body: { password: e.target.password.value } });
+    e.target.reset(); start();
+  } catch (err) { toast(err.message, true); }
+};
+document.getElementById("logout").onclick = async () => { await api("login", { method: "DELETE" }).catch(() => {}); showLogin(); };
+
+/* ---------- Бараа ---------- */
+function renderProducts(){
+  $app.innerHTML = `<div class="grid">
+    <div class="card add" id="new"><div class="pic">+</div><div class="nm">Бараа нэмэх</div></div>
+    ${products.map(p => `
+      <div class="card${p.sold ? " sold" : ""}" data-id="${p.id}">
+        <div class="pic">${art(p)}</div>
+        <div class="nm">${esc(p.name)}</div>
+        <div class="pr">${fmt(p.price)}</div>
+      </div>`).join("")}
+  </div>`;
+  document.getElementById("new").onclick = () => openEditor(null);
+  $app.querySelectorAll("[data-id]").forEach(c => c.onclick = () => openEditor(products.find(p => p.id == c.dataset.id)));
+}
+
+function openEditor(p){
+  const isNew = !p;
+  const d = p ? { ...p } : { name:"", nameEn:"", price:"", sizes:["S","M","L","XL"], description:"", sold:false, image:null };
+  let newImage;   // undefined = keep current image, data URL = replace
+  shade.innerHTML = `<form class="box" id="f">
+    <h2>${isNew ? "Шинэ бараа" : "Бараа засах"}<button type="button" id="x">✕</button></h2>
+    <div class="photo" id="photo">${d.image ? art(d) : "Зураг оруулах<br>(дарна уу)"}</div>
+    <label class="t">Нэр</label><input name="name" required maxlength="120" value="${esc(d.name)}">
+    <div class="two">
+      <div><label class="t">Үнэ (₮)</label><input name="price" type="number" min="0" required value="${d.price}"></div>
+      <div><label class="t">Хэмжээ</label><input name="sizes" value="${esc(d.sizes.join(", "))}" placeholder="S, M, L"></div>
+    </div>
+    <label class="t">Тайлбар</label><textarea name="description" rows="3">${esc(d.description)}</textarea>
+    <label class="check"><input type="checkbox" name="sold" ${d.sold ? "checked" : ""}> Дууссан (SOLD OUT)</label>
+    <div class="btns">
+      ${isNew ? "" : `<button type="button" class="btn red" id="del">Устгах</button>`}
+      <button class="btn dark">Хадгалах</button>
+    </div>
+  </form>`;
+  shade.classList.add("open");
+
+  const form = document.getElementById("f"), file = document.getElementById("file");
+  document.getElementById("x").onclick = closeEditor;
+  document.getElementById("photo").onclick = () => { file.value = ""; file.click(); };
+  file.onchange = async () => {
+    if (!file.files[0]) return;
+    try { newImage = await shrink(file.files[0], 800); document.getElementById("photo").innerHTML = `<img src="${newImage}" alt="">`; }
+    catch { toast("Зургийг уншиж чадсангүй", true); }
+  };
+  const del = document.getElementById("del");
+  if (del) del.onclick = async () => {
+    if (!confirm(`"${d.name}" барааг устгах уу?`)) return;
+    await call("products?id=" + d.id, { method: "DELETE" });
+    products = products.filter(x => x.id !== d.id); closeEditor(); renderProducts(); toast("Устгагдлаа");
+  };
+
+  form.onsubmit = async e => {
+    e.preventDefault();
+    const btn = form.querySelector(".btn.dark"); btn.disabled = true; btn.textContent = "Хадгалж байна…";
+    const payload = {
+      name: form.name.value, nameEn: d.nameEn, price: +form.price.value,
+      sizes: form.sizes.value.split(",").map(s => s.trim()).filter(Boolean),
+      description: form.description.value, sold: form.sold.checked, image: newImage,
+    };
+    try {
+      const saved = await call(isNew ? "products" : "products?id=" + d.id, { method: isNew ? "POST" : "PUT", body: payload });
+      products = isNew ? [saved, ...products] : products.map(x => x.id === saved.id ? saved : x);
+      closeEditor(); renderProducts(); toast("Хадгалагдлаа");
+    } catch { btn.disabled = false; btn.textContent = "Хадгалах"; }
+  };
+}
+function closeEditor(){ shade.classList.remove("open"); shade.innerHTML = ""; }
+shade.onclick = e => { if (e.target === shade) closeEditor(); };
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeEditor(); });
+
+// Downscale uploads before sending; WebP keeps transparency.
+function shrink(file, max){
+  return new Promise((res, rej) => {
+    const im = new Image();
+    im.onerror = rej;
+    im.onload = () => {
+      const k = Math.min(1, max / Math.max(im.width, im.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
+      c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(im.src);
+      res(c.toDataURL("image/webp", 0.85));
+    };
+    im.src = URL.createObjectURL(file);
+  });
+}
+
+/* ---------- Захиалга ---------- */
+function renderOrders(){
+  $app.innerHTML = orders.length ? orders.map(o => {
+    const done = o.status === "shipped";
+    return `<div class="order${done ? " done" : ""}">
+      <div class="who">${esc(o.name)} · <a href="tel:${esc(o.phone)}">${esc(o.phone)}</a></div>
+      <div>${esc(o.address)}</div>
+      <div style="color:var(--muted);font-size:9px">${new Date(o.createdAt).toLocaleString("mn-MN")}</div>
+      <ul>${o.items.map(i => `<li><span>${esc(i.name)} (${esc(i.size)}) × ${i.qty}</span><span>${fmt(i.price * i.qty)}</span></li>`).join("")}
+        ${o.couponCode ? `<li style="color:var(--red)"><span>Купон ${esc(o.couponCode)}</span><span>−${fmt(o.discount)}</span></li>` : ""}</ul>
+      <div class="foot">
+        <b>${fmt(o.total)}</b>
+        <span>
+          <button class="ok" data-ok="${o.id}">${done ? "✓ Хүргэсэн" : "Хүргэсэн"}</button>
+          <button class="x" data-del="${o.id}">Устгах</button>
+        </span>
+      </div>
+    </div>`;
+  }).join("") : `<div class="empty">Захиалга алга</div>`;
+  $app.querySelectorAll("[data-ok]").forEach(b => b.onclick = async () => {
+    const o = orders.find(x => x.id == b.dataset.ok);
+    Object.assign(o, await call("orders?id=" + o.id, { method: "PATCH", body: { status: o.status === "shipped" ? "new" : "shipped" } }));
+    render();
+  });
+  $app.querySelectorAll("[data-del]").forEach(b => b.onclick = async () => {
+    if (!confirm("Энэ захиалгыг устгах уу?")) return;
+    await call("orders?id=" + b.dataset.del, { method: "DELETE" });
+    orders = orders.filter(o => o.id != b.dataset.del); render();
+  });
+}
+
+/* ---------- Купон ---------- */
+function renderCoupons(){
+  $app.innerHTML = `
+    <form class="cform" id="cf">
+      <input name="code" placeholder="Код (ж: SALE10)" required pattern="[A-Za-z0-9_-]{3,20}" autocomplete="off">
+      <input name="percent" type="number" min="1" max="100" placeholder="%" required>
+      <button class="btn dark">Нэмэх</button>
+    </form>
+    ${coupons.length ? coupons.map(c => `
+      <div class="crow${c.active ? "" : " off"}">
+        <b>${esc(c.code)}</b><span>−${c.percent}%</span>
+        <button data-tg="${esc(c.code)}">${c.active ? "Идэвхтэй" : "Унтраасан"}</button>
+        <button class="x" data-rm="${esc(c.code)}">✕</button>
+      </div>`).join("") : `<div class="empty">Купон алга</div>`}`;
+  document.getElementById("cf").onsubmit = async e => {
+    e.preventDefault();
+    const c = await call("coupons", { method: "POST", body: { code: e.target.code.value, percent: +e.target.percent.value } });
+    coupons.unshift(c); renderCoupons(); toast("Купон нэмэгдлээ");
+  };
+  $app.querySelectorAll("[data-tg]").forEach(b => b.onclick = async () => {
+    const c = coupons.find(x => x.code === b.dataset.tg);
+    Object.assign(c, await call("coupons?code=" + encodeURIComponent(c.code), { method: "PATCH", body: { active: !c.active } }));
+    renderCoupons();
+  });
+  $app.querySelectorAll("[data-rm]").forEach(b => b.onclick = async () => {
+    if (!confirm(`"${b.dataset.rm}" купоныг устгах уу?`)) return;
+    await call("coupons?code=" + encodeURIComponent(b.dataset.rm), { method: "DELETE" });
+    coupons = coupons.filter(x => x.code !== b.dataset.rm); renderCoupons();
+  });
+}
+
+/* ---------- Tabs ---------- */
+function render(){
+  const fresh = orders.filter(o => o.status !== "shipped").length;
+  document.getElementById("badge").innerHTML = fresh ? `<b>${fresh}</b>` : "";
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
+  ({ products: renderProducts, orders: renderOrders, coupons: renderCoupons })[tab]();
+}
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => { tab = b.dataset.tab; render(); });
+
+async function start(){
+  try { [products, orders, coupons] = await Promise.all([api("products"), api("orders"), api("coupons")]); }
+  catch (e) { if (e.status === 401) return showLogin(); return toast(e.message, true); }
+  document.getElementById("login").hidden = true;
+  document.getElementById("panel").hidden = false;
+  document.getElementById("logout").hidden = false;
+  render();
+}
+start();
+</script>
+
+</body>
+</html>

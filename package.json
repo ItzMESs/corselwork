@@ -1,0 +1,17 @@
+{
+  "name": "corsel",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "postinstall": "prisma generate",
+    "vercel-build": "prisma generate && prisma db push --skip-generate",
+    "db:push": "prisma db push",
+    "dev": "node --env-file=.env dev-server.js"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.16.0"
+  },
+  "devDependencies": {
+    "prisma": "^6.16.0"
+  }
+}
