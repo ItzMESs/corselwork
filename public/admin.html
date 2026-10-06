@@ -80,6 +80,21 @@
   .crow button.x{border-color:var(--red);color:var(--red)}
   .crow.off{color:var(--muted)}
   .crow.off span{color:var(--muted)}
+  .stockbox{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px}
+  .stockbox label{display:grid;gap:2px;font-size:9px;font-weight:600}
+  .stockbox input{padding:7px}
+  .hint{font-size:8px;color:var(--muted);margin-top:4px}
+  .order .otop{display:flex;gap:10px;align-items:center;margin-bottom:8px}
+  .order .otop span{flex:1;color:var(--muted);font-size:9px}
+  .order select{font:inherit;font-size:9px;font-weight:700;padding:6px;border:1.5px solid var(--fg);background:var(--bg);color:var(--fg)}
+  .order .kv{display:flex;gap:10px;font-size:10px;padding:2px 0}
+  .order .kv span:first-child{color:var(--muted);min-width:70px}
+  .order .kv a{color:inherit}
+  .order.st-new{border-color:var(--red)}
+  .order.st-paid{border-color:var(--fg)}
+  .order.st-shipped,.order.st-cancelled{border-color:var(--line);color:var(--muted)}
+  .order.st-cancelled ul{text-decoration:line-through}
+  .settings{border:1.5px solid var(--fg);max-width:420px}
   .empty{padding:60px 0;text-align:center;color:var(--muted)}
 
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--fg);color:var(--bg);padding:10px 16px;font-size:9px;font-weight:600;transition:.25s;pointer-events:none;z-index:30}
@@ -108,6 +123,7 @@
     <button data-tab="products" class="on">Бараа</button>
     <button data-tab="orders">Захиалга<span id="badge"></span></button>
     <button data-tab="coupons">Купон</button>
+    <button data-tab="settings">Тохиргоо</button>
   </nav>
   <main id="app"></main>
 </div>
@@ -155,19 +171,28 @@ function renderProducts(){
   $app.innerHTML = `<div class="grid">
     <div class="card add" id="new"><div class="pic">+</div><div class="nm">Бараа нэмэх</div></div>
     ${products.map(p => `
-      <div class="card${p.sold ? " sold" : ""}" data-id="${p.id}">
+      <div class="card${p.soldOut ? " sold" : ""}" data-id="${p.id}">
         <div class="pic">${art(p)}</div>
         <div class="nm">${esc(p.name)}</div>
         <div class="pr">${fmt(p.price)}</div>
+        <div class="pr">${stockLabel(p)}</div>
       </div>`).join("")}
   </div>`;
   document.getElementById("new").onclick = () => openEditor(null);
   $app.querySelectorAll("[data-id]").forEach(c => c.onclick = () => openEditor(products.find(p => p.id == c.dataset.id)));
 }
 
+const sizesOf = p => p.sizes.length ? p.sizes : ["OS"];
+function stockLabel(p){
+  const tracked = sizesOf(p).filter(s => Number.isInteger(p.stock[s]));
+  if (!tracked.length) return "Үлдэгдэл: ∞";
+  const sum = tracked.reduce((a, s) => a + p.stock[s], 0);
+  return `Үлдэгдэл: ${sum}${tracked.length < sizesOf(p).length ? "+" : ""}`;
+}
+
 function openEditor(p){
   const isNew = !p;
-  const d = p ? { ...p } : { name:"", nameEn:"", price:"", sizes:["S","M","L","XL"], description:"", sold:false, image:null };
+  const d = p ? { ...p, stock: { ...p.stock } } : { name:"", nameEn:"", price:"", sizes:["S","M","L","XL"], stock:{}, description:"", sold:false, image:null };
   let newImage;   // undefined = keep current image, data URL = replace
   shade.innerHTML = `<form class="box" id="f">
     <h2>${isNew ? "Шинэ бараа" : "Бараа засах"}<button type="button" id="x">✕</button></h2>
@@ -175,10 +200,13 @@ function openEditor(p){
     <label class="t">Нэр</label><input name="name" required maxlength="120" value="${esc(d.name)}">
     <div class="two">
       <div><label class="t">Үнэ (₮)</label><input name="price" type="number" min="0" required value="${d.price}"></div>
-      <div><label class="t">Хэмжээ</label><input name="sizes" value="${esc(d.sizes.join(", "))}" placeholder="S, M, L"></div>
+      <div><label class="t">Хэмжээ (таслалаар)</label><input name="sizes" value="${esc(d.sizes.join(", "))}" placeholder="S, M, L"></div>
     </div>
+    <label class="t">Үлдэгдэл (хоосон орхивол хязгааргүй)</label>
+    <div class="stockbox" id="stockbox"></div>
     <label class="t">Тайлбар</label><textarea name="description" rows="3">${esc(d.description)}</textarea>
-    <label class="check"><input type="checkbox" name="sold" ${d.sold ? "checked" : ""}> Дууссан (SOLD OUT)</label>
+    <label class="check"><input type="checkbox" name="sold" ${d.sold ? "checked" : ""}> Гараар дуусгах (SOLD OUT)</label>
+    <div class="hint">Бүх хэмжээний үлдэгдэл 0 болоход автоматаар SOLD OUT болно.</div>
     <div class="btns">
       ${isNew ? "" : `<button type="button" class="btn red" id="del">Устгах</button>`}
       <button class="btn dark">Хадгалах</button>
@@ -187,6 +215,15 @@ function openEditor(p){
   shade.classList.add("open");
 
   const form = document.getElementById("f"), file = document.getElementById("file");
+  const sizeList = () => { const l = form.sizes.value.split(",").map(s => s.trim()).filter(Boolean); return l.length ? [...new Set(l)] : ["OS"]; };
+  const drawStock = () => {
+    // keep what was typed before redrawing
+    form.querySelectorAll("[data-stock]").forEach(i => { d.stock[i.dataset.stock] = i.value === "" ? undefined : +i.value; });
+    document.getElementById("stockbox").innerHTML = sizeList().map(s =>
+      `<label><span>${esc(s)}</span><input type="number" min="0" data-stock="${esc(s)}" value="${Number.isInteger(d.stock[s]) ? d.stock[s] : ""}" placeholder="∞"></label>`).join("");
+  };
+  drawStock();
+  form.sizes.oninput = drawStock;
   document.getElementById("x").onclick = closeEditor;
   document.getElementById("photo").onclick = () => { file.value = ""; file.click(); };
   file.onchange = async () => {
@@ -208,6 +245,7 @@ function openEditor(p){
       name: form.name.value, nameEn: d.nameEn, price: +form.price.value,
       sizes: form.sizes.value.split(",").map(s => s.trim()).filter(Boolean),
       description: form.description.value, sold: form.sold.checked, image: newImage,
+      stock: Object.fromEntries([...form.querySelectorAll("[data-stock]")].filter(i => i.value !== "").map(i => [i.dataset.stock, +i.value])),
     };
     try {
       const saved = await call(isNew ? "products" : "products?id=" + d.id, { method: isNew ? "POST" : "PUT", body: payload });
@@ -238,34 +276,65 @@ function shrink(file, max){
 }
 
 /* ---------- Захиалга ---------- */
+const STATUS = { new:"Шинэ", paid:"Төлбөр орсон", shipped:"Хүргэсэн", cancelled:"Цуцалсан" };
 function renderOrders(){
   $app.innerHTML = orders.length ? orders.map(o => {
-    const done = o.status === "shipped";
-    return `<div class="order${done ? " done" : ""}">
-      <div class="who">${esc(o.name)} · <a href="tel:${esc(o.phone)}">${esc(o.phone)}</a></div>
-      <div>${esc(o.address)}</div>
-      <div style="color:var(--muted);font-size:9px">${new Date(o.createdAt).toLocaleString("mn-MN")}</div>
+    const addr = [o.city, o.district, o.khoroo && o.khoroo + " хороо/баг", o.building, o.apartment && o.apartment + " тоот"].filter(Boolean).join(", ");
+    return `<div class="order st-${o.status}">
+      <div class="otop"><b>#${o.id}</b><span>${new Date(o.createdAt).toLocaleString("mn-MN")}</span>
+        <select data-st="${o.id}" ${o.status === "cancelled" ? "disabled" : ""}>
+          ${Object.entries(STATUS).map(([k, v]) => `<option value="${k}" ${k === o.status ? "selected" : ""}>${v}</option>`).join("")}
+        </select></div>
+      <div class="who">${esc(o.name)}</div>
+      <div class="kv"><span>Утас</span><a href="tel:${esc(o.phone)}">${esc(o.phone)}</a></div>
+      ${o.phone2 ? `<div class="kv"><span>Яаралтай</span><a href="tel:${esc(o.phone2)}">${esc(o.phone2)}</a></div>` : ""}
+      ${o.email ? `<div class="kv"><span>И-мэйл</span><a href="mailto:${esc(o.email)}">${esc(o.email)}</a></div>` : ""}
+      ${addr ? `<div class="kv"><span>Хаяг</span><span class="v">${esc(addr)}</span></div>` : ""}
+      ${o.address ? `<div class="kv"><span>Нэмэлт</span><span class="v" style="white-space:pre-line">${esc(o.address)}</span></div>` : ""}
+      <div class="kv"><span>Төлбөр</span><span class="v">${o.payment === "qpay" ? "QPay" : "Дансаар"}</span></div>
       <ul>${o.items.map(i => `<li><span>${esc(i.name)} (${esc(i.size)}) × ${i.qty}</span><span>${fmt(i.price * i.qty)}</span></li>`).join("")}
         ${o.couponCode ? `<li style="color:var(--red)"><span>Купон ${esc(o.couponCode)}</span><span>−${fmt(o.discount)}</span></li>` : ""}</ul>
       <div class="foot">
         <b>${fmt(o.total)}</b>
-        <span>
-          <button class="ok" data-ok="${o.id}">${done ? "✓ Хүргэсэн" : "Хүргэсэн"}</button>
-          <button class="x" data-del="${o.id}">Устгах</button>
-        </span>
+        <button class="x" data-del="${o.id}">Устгах</button>
       </div>
     </div>`;
   }).join("") : `<div class="empty">Захиалга алга</div>`;
-  $app.querySelectorAll("[data-ok]").forEach(b => b.onclick = async () => {
-    const o = orders.find(x => x.id == b.dataset.ok);
-    Object.assign(o, await call("orders?id=" + o.id, { method: "PATCH", body: { status: o.status === "shipped" ? "new" : "shipped" } }));
-    render();
+  $app.querySelectorAll("[data-st]").forEach(sel => sel.onchange = async () => {
+    const o = orders.find(x => x.id == sel.dataset.st);
+    if (sel.value === "cancelled" && !confirm("Захиалгыг цуцлах уу? Бараа үлдэгдэлд буцаж нэмэгдэнэ. Цуцалсны дараа өөрчлөх боломжгүй.")) { sel.value = o.status; return; }
+    try {
+      Object.assign(o, await call("orders?id=" + o.id, { method: "PATCH", body: { status: sel.value } }));
+      if (sel.value === "cancelled") products = await api("products");
+      render(); toast("Төлөв шинэчлэгдлээ");
+    } catch { sel.value = o.status; }
   });
   $app.querySelectorAll("[data-del]").forEach(b => b.onclick = async () => {
-    if (!confirm("Энэ захиалгыг устгах уу?")) return;
+    if (!confirm("Энэ захиалгыг бүр мөсөн устгах уу? (Үлдэгдэл буцаахгүй. Буцаах бол эхлээд \"Цуцалсан\" болгоно уу)")) return;
     await call("orders?id=" + b.dataset.del, { method: "DELETE" });
     orders = orders.filter(o => o.id != b.dataset.del); render();
   });
+}
+
+/* ---------- Тохиргоо ---------- */
+async function renderSettings(){
+  $app.innerHTML = `<div class="empty">Ачаалж байна…</div>`;
+  let s;
+  try { s = await call("settings"); } catch { return; }
+  $app.innerHTML = `<form class="box settings" id="sf">
+    <h2>Дансны мэдээлэл</h2>
+    <div class="hint">Захиалга өгсний дараа хэрэглэгчид энэ мэдээлэл харагдана.</div>
+    <label class="t">Банк</label><input name="bankName" value="${esc(s.bankName)}" placeholder="Хаан банк">
+    <label class="t">Дансны дугаар</label><input name="bankAccount" value="${esc(s.bankAccount)}">
+    <label class="t">Хүлээн авагчийн нэр</label><input name="bankHolder" value="${esc(s.bankHolder)}">
+    <label class="t">Нэмэлт заавар (заавал биш)</label><textarea name="bankNote" rows="3">${esc(s.bankNote)}</textarea>
+    <div class="btns" style="margin-top:14px"><button class="btn dark">Хадгалах</button></div>
+  </form>`;
+  document.getElementById("sf").onsubmit = async e => {
+    e.preventDefault();
+    await call("settings", { method: "PUT", body: Object.fromEntries(new FormData(e.target)) });
+    toast("Хадгалагдлаа");
+  };
 }
 
 /* ---------- Купон ---------- */
@@ -301,10 +370,10 @@ function renderCoupons(){
 
 /* ---------- Tabs ---------- */
 function render(){
-  const fresh = orders.filter(o => o.status !== "shipped").length;
+  const fresh = orders.filter(o => o.status === "new").length;
   document.getElementById("badge").innerHTML = fresh ? `<b>${fresh}</b>` : "";
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
-  ({ products: renderProducts, orders: renderOrders, coupons: renderCoupons })[tab]();
+  ({ products: renderProducts, orders: renderOrders, coupons: renderCoupons, settings: renderSettings })[tab]();
 }
 document.querySelectorAll("nav button").forEach(b => b.onclick = () => { tab = b.dataset.tab; render(); });
 

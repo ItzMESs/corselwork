@@ -69,6 +69,26 @@
   .disc{display:flex;justify-content:space-between;color:var(--red);font-size:10px;margin-top:12px}
   .total{display:flex;justify-content:space-between;font-weight:800;font-size:12px;margin:20px 0 6px}
   .empty{text-align:center;color:var(--muted);padding:60px 0}
+  .size.out{color:var(--muted);border-color:var(--line);text-decoration:line-through}
+  .stockleft{color:var(--red);font-size:9px;font-weight:600;margin-top:6px}
+  .btnlink{display:grid;place-items:center}
+  .form h2{font-size:11px;font-weight:800;margin:18px 0 2px;padding-bottom:6px;border-bottom:1.5px solid var(--fg)}
+  .form .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  @media (max-width:520px){.form .two{grid-template-columns:1fr}}
+  .fl{display:grid;gap:4px;font-size:9px;font-weight:600}
+  .form select{font:inherit;font-size:10px;padding:9px;border:1.5px solid var(--fg);background:var(--bg);color:var(--fg);width:100%}
+  .form input,.form textarea{width:100%}
+  .payopt{display:flex;gap:8px;align-items:center;padding:12px;border:1.5px solid var(--fg);font-size:10px;font-weight:600;cursor:pointer}
+  .payopt input{accent-color:var(--fg)}
+  .payopt.off{border-color:var(--line);color:var(--muted);cursor:not-allowed}
+  .payopt em{margin-left:auto;font-style:normal;font-size:8px;padding:2px 6px;background:var(--red);color:#fff}
+  .kv{display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:10px}
+  .kv span{color:var(--muted);min-width:110px}
+  .kv b{flex:1;font-weight:800;word-break:break-all}
+  .kv button{padding:5px 9px;border:1.5px solid var(--fg);font-size:8px;font-weight:800}
+  .kv.big b{font-size:16px}
+  .bankbox{border:1.5px solid var(--fg);padding:4px 14px 10px;margin:14px 0 20px}
+  .note{font-size:10px;margin:14px 0 0}
 
   /* About */
   .about{max-width:520px;margin:24px auto 0;font-size:10px}
@@ -105,72 +125,101 @@
 
 <script src="data.js"></script>
 <script>
-
 /* ---------- i18n ---------- */
 const T = {
-  mn:{about:"Бидний тухай",add:"САГСАНД НЭМЭХ",sold:"ДУУССАН",cart:"Сагс",empty:"Таны сагс хоосон байна.",total:"Нийт",checkout:"ЗАХИАЛАХ",back:"← Буцах",added:"Сагсанд нэмэгдлээ",size:"Хэмжээ",
-      desc:"Нүүдэлчдийн тамга, хээ угалзаас сэдэвлэсэн хэвлэлтэй. Хэвлэл бүр нь газар, тэнгэр, хүний хоорондын холбоог илэрхийлэх тэмдэг юм.",
-      note:"(Улаанбаатар хотод гараар хийв)",
-      aboutText:["CORSEL бол Улаанбаатарт төвтэй хувцасны брэнд. Бид монгол уламжлалт хээ, тамга тэмдгийг орчин үеийн гудамжны хувцастай хослуулдаг.","Цуглуулга бүр хязгаарлагдмал тоогоор үйлдвэрлэгддэг бөгөөд дахин гаргахгүй.","Холбоо барих: hello@corsel.mn"],
-      ordered:"Захиалга хүлээн авлаа",fName:"Нэр",fPhone:"Утас",fAddress:"Хүргэлтийн хаяг",cCode:"Купон код",cApply:"Ашиглах",cDisc:"Хөнгөлөлт",cOk:"Купон ашиглагдлаа",cBad:"Купон код буруу байна",none:"Одоогоор бараа алга.",error:"Ачаалж чадсангүй. Дахин оролдоно уу."},
-  en:{about:"About us",add:"ADD TO CART",sold:"SOLD OUT",cart:"Cart",empty:"Your cart is empty.",total:"Total",checkout:"CHECKOUT",back:"← Back",added:"Added to cart",size:"Size",
-      desc:"Printed with motifs drawn from nomadic tamga marks and ornament. Every print is a symbol of the bond between land, sky and people.",
-      note:"(Made by hand in Ulaanbaatar)",
-      aboutText:["CORSEL is a clothing label based in Ulaanbaatar, pairing traditional Mongolian ornament and tamga marks with contemporary streetwear.","Each collection is produced in limited numbers and never restocked.","Contact: hello@corsel.mn"],
-      ordered:"Order received",fName:"Name",fPhone:"Phone",fAddress:"Delivery address",cCode:"Coupon code",cApply:"Apply",cDisc:"Discount",cOk:"Coupon applied",cBad:"Invalid coupon code",none:"No products yet.",error:"Could not load. Please try again."},
+  mn:{about:"Бидний тухай",add:"САГСАНД НЭМЭХ",sold:"ДУУССАН",cart:"Сагс",empty:"Таны сагс хоосон байна.",total:"Нийт",next:"ҮРГЭЛЖЛҮҮЛЭХ",checkout:"ЗАХИАЛАХ",back:"← Буцах",added:"Сагсанд нэмэгдлээ",size:"Хэмжээ",
+      desc:"",left:n=>`${n} ширхэг үлдсэн`,noMore:"Үлдэгдэл хүрэлцэхгүй байна",
+      aboutText:["CORSEL бол Улаанбаатарт төвтэй хувцасны брэнд. Бид монгол уламжлалт хээ, тамга тэмдгийг орчин үеийн гудамжны хувцастай хослуулдаг.","Цуглуулга бүр хязгаарлагдмал тоогоор үйлдвэрлэгддэг бөгөөд дахин гаргахгүй."],
+      cCode:"Купон код",cApply:"Ашиглах",cDisc:"Хөнгөлөлт",cOk:"Купон ашиглагдлаа",cBad:"Купон код буруу байна",none:"Одоогоор бараа алга.",error:"Ачаалж чадсангүй. Дахин оролдоно уу.",
+      order:"Захиалга",contact:"Холбоо барих",delivery:"Хүргэлтийн хаяг",pay:"Төлбөрийн хэлбэр",
+      fName:"Овог нэр",fEmail:"И-мэйл",fPhone:"Утасны дугаар",fPhone2:"Яаралтай үед холбогдох утас",
+      fCity:"Хот / Аймаг",fDistrict:"Дүүрэг / Сум",fKhoroo:"Хороо / Баг",fBuilding:"Байр / Гудамж",fApt:"Тоот",fNote:"Нэмэлт мэдээлэл (орц, давхар, код, тэмдэглэгээ)",choose:"Сонгох",
+      bank:"Дансаар шилжүүлэх",qpay:"QPay",soon:"Тун удахгүй",
+      done:"Захиалга хүлээн авлаа",orderNo:"Захиалгын дугаар",payNow:"Доорх дансанд төлбөрөө шилжүүлнэ үү. Төлбөр орсны дараа захиалга баталгаажна.",
+      bName:"Банк",bAcc:"Дансны дугаар",bHolder:"Хүлээн авагч",bRef:"Гүйлгээний утга",amount:"Дүн",copy:"Хуулах",copied:"Хуулагдлаа",home:"НҮҮР ХУУДАС"},
+  en:{about:"About us",add:"ADD TO CART",sold:"SOLD OUT",cart:"Cart",empty:"Your cart is empty.",total:"Total",next:"CONTINUE",checkout:"PLACE ORDER",back:"← Back",added:"Added to cart",size:"Size",
+      desc:"",left:n=>`${n} left`,noMore:"Not enough stock",
+      aboutText:["CORSEL is a clothing label based in Ulaanbaatar, pairing traditional Mongolian ornament and tamga marks with contemporary streetwear.","Each collection is produced in limited numbers and never restocked."],
+      cCode:"Coupon code",cApply:"Apply",cDisc:"Discount",cOk:"Coupon applied",cBad:"Invalid coupon code",none:"No products yet.",error:"Could not load. Please try again.",
+      order:"Order",contact:"Contact",delivery:"Delivery address",pay:"Payment method",
+      fName:"Full name",fEmail:"Email",fPhone:"Phone number",fPhone2:"Emergency contact phone",
+      fCity:"City / Province",fDistrict:"District / Soum",fKhoroo:"Khoroo / Bag",fBuilding:"Building / Street",fApt:"Apartment no.",fNote:"Additional info (entrance, floor, door code, notes)",choose:"Select",
+      bank:"Bank transfer",qpay:"QPay",soon:"Coming soon",
+      done:"Order received",orderNo:"Order number",payNow:"Please transfer the payment to the account below. Your order is confirmed once payment arrives.",
+      bName:"Bank",bAcc:"Account number",bHolder:"Account holder",bRef:"Transfer reference",amount:"Amount",copy:"Copy",copied:"Copied",home:"HOME"},
 };
+const CITIES = ["Улаанбаатар","Архангай","Баян-Өлгий","Баянхонгор","Булган","Говь-Алтай","Говьсүмбэр","Дархан-Уул","Дорноговь","Дорнод","Дундговь","Завхан","Орхон","Өвөрхангай","Өмнөговь","Сүхбаатар","Сэлэнгэ","Төв","Увс","Ховд","Хөвсгөл","Хэнтий"];
+const UB_DISTRICTS = ["Баянгол","Баянзүрх","Сонгинохайрхан","Сүхбаатар","Хан-Уул","Чингэлтэй","Налайх","Багануур","Багахангай"];
 
 /* ---------- State ---------- */
 let PRODUCTS = [];
 let coupon = null;   // { code, percent } verified by the server
 let lang = store.get("corsel-lang", "mn");
 let cart = store.get("corsel-cart", []);
+let lastOrder = null;
+let draft = store.get("corsel-checkout", {});   // remembers the customer's form between visits
 
 const $app = document.getElementById("app");
 const name = p => esc(lang === "en" && p.nameEn ? p.nameEn : p.name);
-const desc = p => esc(p.description) || T[lang].desc;
 const byId = id => PRODUCTS.find(p => p.id === id);
+const sizesOf = p => p.sizes.length ? p.sizes : ["OS"];
+const left = (p, s) => Number.isInteger(p.stock[s]) ? p.stock[s] : Infinity;
+const inCart = (id, s) => cart.filter(c => c.id === id && c.s === s).reduce((a, c) => a + c.q, 0);
 
 function saveCart(){ store.set("corsel-cart", cart); document.getElementById("count").textContent = cart.reduce((a,c)=>a+c.q,0); }
-function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2000); }
+function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2400); }
+
+async function loadProducts(){
+  PRODUCTS = await api("products");
+  cart = cart.filter(c => byId(c.id));   // drop items deleted by the admin
+  saveCart();
+}
 
 /* ---------- Views ---------- */
 function viewHome(){
   $app.innerHTML = PRODUCTS.length ? `<div class="grid">${PRODUCTS.map(p =>
-    `<a class="item${p.sold?" sold":""}" href="#/product/${p.id}" title="${name(p)}">${art(p)}</a>`).join("")}</div>`
+    `<a class="item${p.soldOut?" sold":""}" href="#/product/${p.id}" title="${name(p)}">${art(p)}</a>`).join("")}</div>`
     : `<div class="empty">${T[lang].none}</div>`;
 }
 
 function viewProduct(id){
-  const p = byId(+id);
+  const t = T[lang], p = byId(+id);
   if (!p) return viewHome();
-  const sizes = p.sizes.length ? p.sizes : ["OS"];
-  let sel = sizes[0];
-  $app.innerHTML = `<div class="product">
-    <a class="back" href="#/">${T[lang].back}</a>
-    <div class="img">${art(p)}</div>
-    <h1>${name(p)}</h1>
-    <p style="white-space:pre-line">${desc(p)}</p>
-    <div class="row">${sizes.map(s=>`<button class="size${s===sel?" on":""}" data-s="${esc(s)}">${esc(s)}</button>`).join("")}</div>
-    <div class="price">${fmt(p.price)}</div>
-    <button class="add" ${p.sold?"disabled":""}>${p.sold?T[lang].sold:T[lang].add}</button>
-  </div>`;
-  $app.querySelectorAll(".size").forEach(b => b.onclick = () => {
-    sel = b.dataset.s; $app.querySelectorAll(".size").forEach(x=>x.classList.toggle("on", x===b));
-  });
-  $app.querySelector(".add").onclick = () => {
-    const ex = cart.find(c => c.id===p.id && c.s===sel);
-    ex ? ex.q++ : cart.push({ id:p.id, s:sel, q:1 });
-    saveCart(); toast(T[lang].added);
+  const sizes = sizesOf(p);
+  let sel = sizes.find(s => left(p, s) > 0) || sizes[0];
+  const draw = () => {
+    const n = left(p, sel), out = p.soldOut || n <= 0;
+    $app.innerHTML = `<div class="product">
+      <a class="back" href="#/">${t.back}</a>
+      <div class="img">${art(p)}</div>
+      <h1>${name(p)}</h1>
+      ${p.description ? `<p style="white-space:pre-line">${esc(p.description)}</p>` : ""}
+      <div class="row">${sizes.map(s => `<button class="size${s===sel?" on":""}${left(p,s)<=0?" out":""}" data-s="${esc(s)}">${esc(s)}</button>`).join("")}</div>
+      <div class="price">${fmt(p.price)}</div>
+      ${!out && n !== Infinity && n <= 5 ? `<div class="stockleft">${t.left(n)}</div>` : ""}
+      <button class="add" ${out?"disabled":""}>${out ? t.sold : t.add}</button>
+    </div>`;
+    $app.querySelectorAll(".size").forEach(b => b.onclick = () => { sel = b.dataset.s; draw(); });
+    $app.querySelector(".add").onclick = () => {
+      if (inCart(p.id, sel) + 1 > left(p, sel)) return toast(t.noMore);
+      const ex = cart.find(c => c.id===p.id && c.s===sel);
+      ex ? ex.q++ : cart.push({ id:p.id, s:sel, q:1 });
+      saveCart(); toast(t.added);
+    };
   };
+  draw();
+}
+
+function totals(){
+  const subtotal = cart.reduce((a,c)=>a + byId(c.id).price*c.q, 0);
+  const discount = coupon ? Math.round(subtotal * coupon.percent / 100) : 0;
+  return { subtotal, discount, total: subtotal - discount };
 }
 
 function viewCart(){
   const t = T[lang];
   if (!cart.length){ $app.innerHTML = `<div class="cart"><h1>${t.cart}</h1><div class="empty">${t.empty}</div></div>`; return; }
-  const subtotal = cart.reduce((a,c)=>a + byId(c.id).price*c.q, 0);
-  const discount = coupon ? Math.round(subtotal * coupon.percent / 100) : 0;
-  const total = subtotal - discount;
+  const { discount, total } = totals();
   $app.innerHTML = `<div class="cart"><h1>${t.cart}</h1>
     ${cart.map((c,i)=>{ const p=byId(c.id); return `<div class="line">
       <a href="#/product/${p.id}">${art(p)}</a>
@@ -183,14 +232,12 @@ function viewCart(){
     </form>
     ${coupon ? `<div class="disc"><span>${t.cDisc} (${esc(coupon.code)} −${coupon.percent}%)</span><span>−${fmt(discount)}</span></div>` : ""}
     <div class="total"><span>${t.total}</span><span>${fmt(total)}</span></div>
-    <form id="checkout" class="form">
-      <input name="name" placeholder="${t.fName}" required>
-      <input name="phone" placeholder="${t.fPhone}" required pattern="[0-9+ ]{8,}">
-      <textarea name="address" placeholder="${t.fAddress}" rows="2" required></textarea>
-      <button class="add">${t.checkout}</button>
-    </form></div>`;
+    <a class="add btnlink" href="#/checkout">${t.next}</a>
+  </div>`;
   $app.querySelectorAll(".qty button").forEach(b => b.onclick = () => {
-    const c = cart[b.dataset.i]; c.q += +b.dataset.d;
+    const c = cart[b.dataset.i], p = byId(c.id);
+    if (+b.dataset.d > 0 && inCart(c.id, c.s) + 1 > left(p, c.s)) return toast(t.noMore);
+    c.q += +b.dataset.d;
     if (c.q <= 0) cart.splice(b.dataset.i, 1);
     saveCart(); viewCart();
   });
@@ -202,18 +249,100 @@ function viewCart(){
     try { coupon = await api("coupons?code=" + encodeURIComponent(code)); viewCart(); toast(t.cOk); }
     catch { toast(t.cBad); }
   };
-  document.getElementById("checkout").onsubmit = async e => {
+}
+
+function viewCheckout(){
+  const t = T[lang];
+  if (!cart.length) return viewCart();
+  const { discount, total } = totals();
+  const d = draft, ub = (d.city || "Улаанбаатар") === "Улаанбаатар";
+  const field = (n, label, type = "text", extra = "") =>
+    `<label class="fl"><span>${label}</span><input name="${n}" type="${type}" value="${esc(d[n])}" ${extra}></label>`;
+  $app.innerHTML = `<div class="cart">
+    <a class="back" href="#/cart">${t.back}</a>
+    <h1>${t.order}</h1>
+    <form id="checkout" class="form">
+      <h2>${t.contact}</h2>
+      ${field("name", t.fName + " *", "text", 'required maxlength="100" autocomplete="name"')}
+      ${field("email", t.fEmail + " *", "email", 'required maxlength="120" autocomplete="email"')}
+      <div class="two">
+        ${field("phone", t.fPhone + " *", "tel", 'required pattern="[0-9+ ]{8,20}" autocomplete="tel"')}
+        ${field("phone2", t.fPhone2 + " *", "tel", 'required pattern="[0-9+ ]{8,20}"')}
+      </div>
+
+      <h2>${t.delivery}</h2>
+      <div class="two">
+        <label class="fl"><span>${t.fCity} *</span><select name="city" required>
+          ${CITIES.map(c => `<option ${c === (d.city || "Улаанбаатар") ? "selected" : ""}>${c}</option>`).join("")}
+        </select></label>
+        <label class="fl"><span>${t.fDistrict} *</span>${ub
+          ? `<select name="district" required><option value="">${t.choose}</option>${UB_DISTRICTS.map(x => `<option ${x === d.district ? "selected" : ""}>${x}</option>`).join("")}</select>`
+          : `<input name="district" required maxlength="60" value="${esc(d.district)}">`}</label>
+      </div>
+      <div class="two">
+        ${field("khoroo", t.fKhoroo + " *", "text", 'required maxlength="60"')}
+        ${field("building", t.fBuilding + " *", "text", 'required maxlength="120"')}
+      </div>
+      ${field("apartment", t.fApt + " *", "text", 'required maxlength="30"')}
+      <label class="fl"><span>${t.fNote}</span><textarea name="note" rows="3" maxlength="1000">${esc(d.note)}</textarea></label>
+
+      <h2>${t.pay}</h2>
+      <label class="payopt"><input type="radio" name="payment" value="bank" checked> ${t.bank}</label>
+      <label class="payopt off"><input type="radio" name="payment" value="qpay" disabled> ${t.qpay} <em>${t.soon}</em></label>
+
+      ${coupon ? `<div class="disc"><span>${t.cDisc} (${esc(coupon.code)} −${coupon.percent}%)</span><span>−${fmt(discount)}</span></div>` : ""}
+      <div class="total"><span>${t.total}</span><span>${fmt(total)}</span></div>
+      <button class="add">${t.checkout}</button>
+    </form></div>`;
+
+  const form = document.getElementById("checkout");
+  const remember = () => { draft = Object.fromEntries(new FormData(form)); delete draft.payment; store.set("corsel-checkout", draft); };
+  form.oninput = remember;
+  form.city.onchange = () => { remember(); draft.district = ""; viewCheckout(); };
+  form.onsubmit = async e => {
     e.preventDefault();
-    const btn = e.target.querySelector("button"); btn.disabled = true;
-    const f = new FormData(e.target);
+    remember();
+    const btn = form.querySelector("button.add"); btn.disabled = true;
     try {
-      await api("orders", { method: "POST", body: {
-        name: f.get("name"), phone: f.get("phone"), address: f.get("address"), coupon: coupon?.code,
+      const res = await api("orders", { method: "POST", body: {
+        ...draft, payment: "bank", coupon: coupon?.code,
         items: cart.map(c => ({ id: c.id, size: c.s, qty: c.q })),
       }});
-      cart = []; coupon = null; saveCart(); viewCart(); toast(t.ordered);
-    } catch (err) { toast(err.message); btn.disabled = false; }
+      lastOrder = { ...res, phone: draft.phone };
+      cart = []; coupon = null; saveCart();
+      loadProducts().catch(() => {});   // refresh stock / sold-out state
+      location.hash = "#/done";
+    } catch (err) {
+      toast(err.message); btn.disabled = false;
+      loadProducts().catch(() => {});
+    }
   };
+}
+
+async function viewDone(){
+  const t = T[lang];
+  if (!lastOrder) return viewHome();
+  const ref = `${lastOrder.id} ${lastOrder.phone}`;
+  let s = {};
+  try { s = await api("settings"); } catch {}
+  const row = (label, value, copy) => value ? `<div class="kv"><span>${label}</span><b>${esc(value)}</b>${copy ? `<button data-copy="${esc(value)}">${t.copy}</button>` : ""}</div>` : "";
+  $app.innerHTML = `<div class="cart">
+    <h1>${t.done} ✓</h1>
+    <div class="kv big"><span>${t.orderNo}</span><b>#${lastOrder.id}</b></div>
+    <p class="note">${t.payNow}</p>
+    <div class="bankbox">
+      ${row(t.bName, s.bankName)}
+      ${row(t.bAcc, s.bankAccount, true)}
+      ${row(t.bHolder, s.bankHolder)}
+      ${row(t.amount, fmt(lastOrder.total))}
+      ${row(t.bRef, ref, true)}
+      ${s.bankNote ? `<p class="note" style="white-space:pre-line">${esc(s.bankNote)}</p>` : ""}
+    </div>
+    <a class="add btnlink" href="#/">${t.home}</a>
+  </div>`;
+  $app.querySelectorAll("[data-copy]").forEach(b => b.onclick = async () => {
+    try { await navigator.clipboard.writeText(b.dataset.copy); toast(t.copied); } catch {}
+  });
 }
 
 function viewAbout(){
@@ -221,26 +350,29 @@ function viewAbout(){
 }
 
 /* ---------- Router ---------- */
-function route(){
+async function route(){
   const h = location.hash.replace(/^#\/?/, "").split("/");
   document.documentElement.lang = lang;
   document.getElementById("aboutLink").textContent = T[lang].about;
   document.querySelectorAll(".lang button").forEach(b => b.classList.toggle("on", b.dataset.lang===lang));
+  // Refresh the catalogue whenever the shop pages are opened, so new products and stock show up without a reload.
+  if (["", "product", "cart"].includes(h[0])) {
+    try { await loadProducts(); }
+    catch { if (!PRODUCTS.length) { $app.innerHTML = `<div class="empty">${T[lang].error}</div>`; return; } }
+  }
   if (h[0]==="product") viewProduct(h[1]);
   else if (h[0]==="cart") viewCart();
+  else if (h[0]==="checkout") viewCheckout();
+  else if (h[0]==="done") viewDone();
   else if (h[0]==="about") viewAbout();
   else viewHome();
   window.scrollTo(0,0);
 }
 document.querySelectorAll(".lang button").forEach(b => b.onclick = () => { lang = b.dataset.lang; store.set("corsel-lang", lang); route(); });
 window.addEventListener("hashchange", route);
-
-(async () => {
-  try { PRODUCTS = await api("products"); }
-  catch { $app.innerHTML = `<div class="empty">${T[lang].error}</div>`; return; }
-  cart = cart.filter(c => byId(c.id));   // drop items deleted by the admin
-  saveCart(); route();
-})();
+saveCart();
+route();
 </script>
+
 </body>
 </html>

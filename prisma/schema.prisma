@@ -13,6 +13,7 @@ model Product {
   nameEn      String   @default("")
   price       Int
   sizes       String[]
+  stock       Json?    // { "S": 3, "M": 0 } — a size missing from the map has unlimited stock
   description String   @default("")
   sold        Boolean  @default(false)
   image       Bytes?
@@ -24,10 +25,18 @@ model Product {
 model Order {
   id         Int      @id @default(autoincrement())
   createdAt  DateTime @default(now())
-  status     String   @default("new") // new | shipped
+  status     String   @default("new") // new | paid | shipped | cancelled
   name       String
+  email      String   @default("")
   phone      String
-  address    String
+  phone2     String   @default("") // emergency contact
+  city       String   @default("") // хот / аймаг
+  district   String   @default("") // дүүрэг / сум
+  khoroo     String   @default("") // хороо / баг
+  building   String   @default("") // байр / гудамж
+  apartment  String   @default("") // тоот
+  address    String   @default("") // нэмэлт мэдээлэл
+  payment    String   @default("bank") // bank | qpay
   items      Json     // [{ id, name, size, qty, price }]
   subtotal   Int
   discount   Int      @default(0)
@@ -40,4 +49,9 @@ model Coupon {
   percent   Int
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
+}
+
+model Setting {
+  key   String @id
+  value String
 }
