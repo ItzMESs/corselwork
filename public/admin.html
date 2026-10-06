@@ -35,7 +35,7 @@
     header{padding:10px 16px}
     header .brand{font-size:16px}
     header img{width:36px;height:36px}
-    .layout{grid-template-columns:minmax(0,1fr)}
+    .layout{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr}
     .side{border-right:0;border-bottom:1.5px solid var(--fg)}
     nav{flex-direction:row;overflow-x:auto;position:static}
     nav button{border-bottom:0;padding:12px 14px;white-space:nowrap;font-size:11px}
@@ -45,7 +45,8 @@
   /* Dashboard */
   .dash h1{font-size:14px;font-weight:800;margin-bottom:16px}
   .tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px}
-  @media (max-width:1000px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media (max-width:1000px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr)) !important}}
+  @media (max-width:500px){.tiles .tile{padding:12px}.tiles .tile b{font-size:15px}}
   .tile{border:1.5px solid var(--fg);padding:16px;text-align:left;display:block;width:100%}
   .tile:hover{background:#f6f6f6}
   .tile span{display:block;font-size:9px;color:var(--muted);font-weight:600}
@@ -106,6 +107,16 @@
   .box h2{font-size:12px;font-weight:800;margin-bottom:14px;display:flex;justify-content:space-between}
   .photo{width:200px;max-width:100%;margin-left:auto;margin-right:auto;aspect-ratio:1/1;border:1.5px dashed var(--fg);display:grid;place-items:center;cursor:pointer;margin-bottom:12px;color:var(--muted);font-size:10px;text-align:center}
   .photo svg,.photo img{width:80%;height:80%;object-fit:contain}
+  .gallery{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:6px}
+  .gi{position:relative;aspect-ratio:1/1;border:1.5px solid var(--line);display:grid;place-items:center}
+  .gi img{width:86%;height:70%;object-fit:contain;margin-top:-14px}
+  .gi .cover{position:absolute;top:0;left:0;background:var(--fg);color:var(--bg);font-size:7px;font-weight:800;padding:2px 5px}
+  .gi .gb{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;border-top:1px solid var(--line)}
+  .gi .gb button{flex:1;height:22px;font-size:12px;line-height:1}
+  .gi .gb button:disabled{opacity:.2;cursor:default}
+  .gi .gb button[data-rm]{color:var(--red);font-size:10px}
+  .addimg{border:1.5px dashed var(--fg);font-size:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+  .addimg small{font-size:8px;font-weight:600}
   label.t{display:block;font-size:9px;font-weight:600;margin:10px 0 4px}
   .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .check{display:flex;gap:8px;align-items:center;margin:14px 0;font-size:10px;cursor:pointer}
@@ -156,6 +167,38 @@
   .order .fee span{color:var(--muted);flex:1}
   .order .fee input{width:120px;padding:6px}
   .order .fee button{padding:6px 10px;font-size:9px;font-weight:800;border:1.5px solid var(--fg)}
+  .anote{display:flex;gap:8px;align-items:flex-start;margin:8px 0}
+  .anote textarea{flex:1;font-size:10px;padding:8px;background:#fffbe6;border:1.5px solid #e8d48a;resize:vertical}
+  .anote button{padding:7px 10px;font-size:9px;font-weight:800;border:1.5px solid var(--fg)}
+  .ranges{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:16px}
+  .ranges button{padding:8px 12px;border:1.5px solid var(--fg);font-size:10px;font-weight:700}
+  .ranges button.on{background:var(--fg);color:var(--bg)}
+  .ranges .custom{display:flex;align-items:center;gap:6px;margin-left:auto;padding:4px;border:1.5px solid transparent}
+  .ranges .custom.on{border-color:var(--fg)}
+  .ranges input[type=date]{width:auto;padding:6px;font-size:10px}
+  @media (max-width:800px){.ranges .custom{margin-left:0;width:100%}.ranges .custom input{flex:1}}
+  .toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+  .toolbar input{flex:1;min-width:180px}
+  .toolbar select{font:inherit;font-size:10px;padding:8px;border:1.5px solid var(--fg);background:var(--bg)}
+  .ctable{width:100%;border-collapse:collapse;font-size:10px}
+  .ctable th{text-align:left;font-size:9px;color:var(--muted);font-weight:600;padding:8px 6px;border-bottom:1.5px solid var(--fg)}
+  .ctable td{padding:10px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+  .ctable td small{display:block;color:var(--muted);font-size:8px}
+  .ctable td a{color:inherit}
+  .ctable .red{color:var(--red);font-weight:700}
+  .ctable tr.off td{color:var(--muted)}
+  .ctable .act{white-space:nowrap;text-align:right}
+  .ctable .act button{padding:5px 9px;font-size:9px;font-weight:800;border:1.5px solid var(--fg);margin-left:4px}
+  .ctable .act button.x{border-color:var(--red);color:var(--red)}
+  .ctable tr.click{cursor:pointer}
+  .ctable tr.click:hover td{background:#f6f6f6}
+  .ctable tr.sub td{background:#fafafa;padding:4px 12px}
+  @media (max-width:800px){
+    .ctable thead{display:none}
+    .ctable tr{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line);padding:6px 0}
+    .ctable td{border:0;padding:3px 6px}
+    .ctable tr.sub{display:block}
+  }
   .empty{padding:60px 0;text-align:center;color:var(--muted)}
 
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--fg);color:var(--bg);padding:10px 16px;font-size:9px;font-weight:600;transition:.25s;pointer-events:none;z-index:30}
@@ -184,6 +227,7 @@
       <button data-tab="dashboard" class="on">Dashboard</button>
       <button data-tab="products">Бараа</button>
       <button data-tab="orders">Захиалга<span id="badge"></span></button>
+      <button data-tab="customers">Үйлчлүүлэгч</button>
       <button data-tab="coupons">Купон</button>
       <button data-tab="settings">Тохиргоо</button>
     </nav>
@@ -192,7 +236,7 @@
 </div>
 
 <div class="shade" id="shade"></div>
-<input type="file" id="file" accept="image/*" hidden>
+<input type="file" id="file" accept="image/*" multiple hidden>
 <div class="toast" id="toast"></div>
 
 <script src="data.js"></script>
@@ -256,10 +300,12 @@ function stockLabel(p){
 function openEditor(p){
   const isNew = !p;
   const d = p ? { ...p, stock: { ...p.stock } } : { name:"", nameEn:"", price:"", sizes:["S","M","L","XL"], stock:{}, description:"", sold:false, image:null };
-  let newImage;   // undefined = keep current image, data URL = replace
+  // Gallery being edited: { keep: ref, url } for stored images, { data, url } for new uploads. First = cover.
+  let gal = (d.images || []).map(i => ({ keep: i.ref, url: i.url }));
   shade.innerHTML = `<form class="box" id="f">
     <h2>${isNew ? "Шинэ бараа" : "Бараа засах"}<button type="button" id="x">✕</button></h2>
-    <div class="photo" id="photo">${d.image ? art(d) : "Зураг оруулах<br>(дарна уу)"}</div>
+    <label class="t">Зургууд (эхнийх нь нүүр зураг, 8 хүртэл)</label>
+    <div class="gallery" id="gallery"></div>
     <label class="t">Нэр</label><input name="name" required maxlength="120" value="${esc(d.name)}">
     <div class="two">
       <div><label class="t">Үнэ (₮)</label><input name="price" type="number" min="0" required value="${d.price}"></div>
@@ -289,10 +335,33 @@ function openEditor(p){
   drawStock();
   form.sizes.oninput = drawStock;
   document.getElementById("x").onclick = closeEditor;
-  document.getElementById("photo").onclick = () => { file.value = ""; file.click(); };
+  const drawGallery = () => {
+    const box = document.getElementById("gallery");
+    box.innerHTML = gal.map((g, i) => `<div class="gi">
+        <img src="${esc(g.url)}" alt="">
+        ${i === 0 ? `<span class="cover">Нүүр</span>` : ""}
+        <div class="gb">
+          <button type="button" data-mv="${i}" data-d="-1" ${i === 0 ? "disabled" : ""} aria-label="Зүүн тийш">‹</button>
+          <button type="button" data-rm="${i}" aria-label="Устгах">✕</button>
+          <button type="button" data-mv="${i}" data-d="1" ${i === gal.length - 1 ? "disabled" : ""} aria-label="Баруун тийш">›</button>
+        </div></div>`).join("") +
+      (gal.length < 8 ? `<button type="button" class="gi addimg" id="addimg">+<small>Зураг нэмэх</small></button>` : "");
+    box.querySelectorAll("[data-mv]").forEach(b => b.onclick = () => {
+      const i = +b.dataset.mv, j = i + +b.dataset.d;
+      [gal[i], gal[j]] = [gal[j], gal[i]]; drawGallery();
+    });
+    box.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => { gal.splice(+b.dataset.rm, 1); drawGallery(); });
+    const add = document.getElementById("addimg");
+    if (add) add.onclick = () => { file.value = ""; file.click(); };
+  };
+  drawGallery();
   file.onchange = async () => {
-    if (!file.files[0]) return;
-    try { newImage = await shrink(file.files[0], 800); document.getElementById("photo").innerHTML = `<img src="${newImage}" alt="">`; }
+    const picked = [...file.files].slice(0, 8 - gal.length);
+    if (!picked.length) return;
+    try {
+      for (const f of picked) { const data = await shrink(f, 1000); gal.push({ data, url: data }); }
+      drawGallery();
+    }
     catch { toast("Зургийг уншиж чадсангүй", true); }
   };
   const del = document.getElementById("del");
@@ -308,7 +377,8 @@ function openEditor(p){
     const payload = {
       name: form.name.value, nameEn: d.nameEn, price: +form.price.value, compareAt: form.compareAt.value,
       sizes: form.sizes.value.split(",").map(s => s.trim()).filter(Boolean),
-      description: form.description.value, sold: form.sold.checked, image: newImage,
+      description: form.description.value, sold: form.sold.checked,
+      images: gal.map(g => g.data ? { data: g.data } : { keep: g.keep }),
       stock: Object.fromEntries([...form.querySelectorAll("[data-stock]")].filter(i => i.value !== "").map(i => [i.dataset.stock, +i.value])),
     };
     try {
@@ -358,6 +428,10 @@ function renderOrders(){
       <div class="kv"><span>Төлбөр</span><span class="v">${o.payment === "qpay" ? "QPay" : "Дансаар"}</span></div>
       <ul>${o.items.map(i => `<li><span>${esc(i.name)} (${esc(i.size)}) × ${i.qty}</span><span>${fmt(i.price * i.qty)}</span></li>`).join("")}
         ${o.couponCode ? `<li style="color:var(--red)"><span>Купон ${esc(o.couponCode)}</span><span>−${fmt(o.discount)}</span></li>` : ""}</ul>
+      <form class="anote" data-note="${o.id}">
+        <textarea name="note" rows="${o.adminNote ? 2 : 1}" maxlength="2000" placeholder="📝 Дотоод тэмдэглэл (зөвхөн танд харагдана)">${esc(o.adminNote)}</textarea>
+        <button>Хадгалах</button>
+      </form>
       <form class="fee" data-fee="${o.id}">
         <span>Хүргэлтийн төлбөр</span>
         <input name="fee" type="number" min="0" step="100" value="${o.deliveryFee ?? ""}" placeholder="Тооцоогүй">
@@ -377,6 +451,12 @@ function renderOrders(){
       if (sel.value === "cancelled") products = await api("products");
       render(); toast("Төлөв шинэчлэгдлээ");
     } catch { sel.value = o.status; }
+  });
+  $app.querySelectorAll("[data-note]").forEach(f => f.onsubmit = async e => {
+    e.preventDefault();
+    const o = orders.find(x => x.id == f.dataset.note);
+    Object.assign(o, await call("orders?id=" + o.id, { method: "PATCH", body: { adminNote: f.note.value } }));
+    render(); toast("Тэмдэглэл хадгалагдлаа");
   });
   $app.querySelectorAll("[data-fee]").forEach(f => f.onsubmit = async e => {
     e.preventDefault();
@@ -421,18 +501,38 @@ async function renderSettings(){
 
 /* ---------- Купон ---------- */
 function renderCoupons(){
+  // Usage from orders that were not cancelled
+  const stats = {};
+  orders.filter(o => o.couponCode && o.status !== "cancelled").forEach(o => {
+    const s = stats[o.couponCode] || (stats[o.couponCode] = { uses: 0, discount: 0, sales: 0, paid: 0 });
+    s.uses++; s.discount += o.discount; s.sales += o.total;
+    if (o.status === "paid" || o.status === "shipped") s.paid++;
+  });
+  const all = Object.values(stats);
+  const totalUses = all.reduce((a, s) => a + s.uses, 0), totalDisc = all.reduce((a, s) => a + s.discount, 0), totalSales = all.reduce((a, s) => a + s.sales, 0);
+
   $app.innerHTML = `
+    <div class="tiles" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+      <div class="tile"><span>Купон ашигласан</span><b>${totalUses}</b><small>захиалга</small></div>
+      <div class="tile"><span>Өгсөн хөнгөлөлт</span><b>${fmt(totalDisc)}</b><small>нийт</small></div>
+      <div class="tile"><span>Купонтой борлуулалт</span><b>${fmt(totalSales)}</b><small>хөнгөлөлтийн дараах</small></div>
+    </div>
     <form class="cform" id="cf">
       <input name="code" placeholder="Код (ж: SALE10)" required pattern="[A-Za-z0-9_-]{3,20}" autocomplete="off">
       <input name="percent" type="number" min="1" max="100" placeholder="%" required>
       <button class="btn dark">Нэмэх</button>
     </form>
-    ${coupons.length ? coupons.map(c => `
-      <div class="crow${c.active ? "" : " off"}">
-        <b>${esc(c.code)}</b><span>−${c.percent}%</span>
-        <button data-tg="${esc(c.code)}">${c.active ? "Идэвхтэй" : "Унтраасан"}</button>
-        <button class="x" data-rm="${esc(c.code)}">✕</button>
-      </div>`).join("") : `<div class="empty">Купон алга</div>`}`;
+    ${coupons.length ? `<table class="ctable">
+      <thead><tr><th>Код</th><th>Хувь</th><th>Ашигласан</th><th>Хөнгөлөлт</th><th>Борлуулалт</th><th></th></tr></thead>
+      <tbody>${coupons.map(c => { const s = stats[c.code] || { uses: 0, discount: 0, sales: 0, paid: 0 }; return `
+        <tr class="${c.active ? "" : "off"}">
+          <td><b>${esc(c.code)}</b></td>
+          <td class="red">−${c.percent}%</td>
+          <td>${s.uses} удаа${s.uses ? `<small>${s.paid} нь төлөгдсөн</small>` : ""}</td>
+          <td>${fmt(s.discount)}</td>
+          <td>${fmt(s.sales)}</td>
+          <td class="act"><button data-tg="${esc(c.code)}">${c.active ? "Идэвхтэй" : "Унтраасан"}</button><button class="x" data-rm="${esc(c.code)}">✕</button></td>
+        </tr>`; }).join("")}</tbody></table>` : `<div class="empty">Купон алга</div>`}`;
   document.getElementById("cf").onsubmit = async e => {
     e.preventDefault();
     const c = await call("coupons", { method: "POST", body: { code: e.target.code.value, percent: +e.target.percent.value } });
@@ -450,57 +550,172 @@ function renderCoupons(){
   });
 }
 
+/* ---------- Үйлчлүүлэгч ---------- */
+let custQuery = "", custSort = "spent", custOpen = null;
+const digits = s => String(s || "").replace(/\D/g, "");
+
+// One row per phone number; emails and names used with that phone are collected on it.
+function customerList(){
+  const map = new Map();
+  orders.forEach(o => {
+    const key = digits(o.phone) || String(o.email).toLowerCase();
+    let c = map.get(key);
+    if (!c) map.set(key, c = { key, phone: o.phone, names: [], emails: [], orders: [], spent: 0, last: o.createdAt });
+    if (o.name && !c.names.includes(o.name)) c.names.push(o.name);
+    const em = String(o.email || "").toLowerCase();
+    if (em && !c.emails.includes(em)) c.emails.push(em);
+    c.orders.push(o);
+    if (o.status === "paid" || o.status === "shipped") c.spent += o.total;
+    if (new Date(o.createdAt) > new Date(c.last)) c.last = o.createdAt;
+  });
+  return [...map.values()];
+}
+
+function renderCustomers(){
+  const all = customerList();
+  const q = custQuery.trim().toLowerCase(), qd = digits(q);
+  const list = all.filter(c => !q || c.names.some(n => n.toLowerCase().includes(q)) || c.emails.some(e => e.includes(q)) || (qd && digits(c.phone).includes(qd)))
+    .sort((a, b) => custSort === "last" ? new Date(b.last) - new Date(a.last) : custSort === "count" ? b.orders.length - a.orders.length : b.spent - a.spent);
+  const repeat = all.filter(c => c.orders.filter(o => o.status !== "cancelled").length > 1).length;
+
+  $app.innerHTML = `
+    <div class="tiles" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+      <div class="tile"><span>Нийт үйлчлүүлэгч</span><b>${all.length}</b><small>утасны дугаараар</small></div>
+      <div class="tile"><span>Давтан худалдан авагч</span><b>${repeat}</b><small>${all.length ? Math.round(repeat / all.length * 100) : 0}%</small></div>
+      <div class="tile"><span>Дундаж худалдан авалт</span><b>${fmt(all.length ? Math.round(all.reduce((a, c) => a + c.spent, 0) / all.length) : 0)}</b><small>нэг үйлчлүүлэгчид</small></div>
+    </div>
+    <div class="toolbar">
+      <input id="cq" placeholder="Нэр, утас, и-мэйлээр хайх…" value="${esc(custQuery)}">
+      <select id="cs">
+        <option value="spent" ${custSort === "spent" ? "selected" : ""}>Их худалдан авалттай</option>
+        <option value="count" ${custSort === "count" ? "selected" : ""}>Олон захиалгатай</option>
+        <option value="last" ${custSort === "last" ? "selected" : ""}>Сүүлд захиалсан</option>
+      </select>
+      <button class="btn" id="copyem" style="flex:none;padding:0 14px">И-мэйлүүд хуулах</button>
+    </div>
+    ${list.length ? `<table class="ctable cust">
+      <thead><tr><th>Нэр</th><th>Утас</th><th>И-мэйл</th><th>Захиалга</th><th>Худалдан авалт</th><th>Сүүлд</th></tr></thead>
+      <tbody>${list.map(c => `
+        <tr class="click" data-c="${esc(c.key)}">
+          <td><b>${esc(c.names[0] || "—")}</b>${c.names.length > 1 ? `<small>${esc(c.names.slice(1).join(", "))}</small>` : ""}</td>
+          <td><a href="tel:${esc(c.phone)}">${esc(c.phone)}</a></td>
+          <td>${c.emails.map(e => `<a href="mailto:${esc(e)}">${esc(e)}</a>`).join("<br>") || "—"}</td>
+          <td>${c.orders.length} захиалга</td>
+          <td><b>${fmt(c.spent)}</b></td>
+          <td>${new Date(c.last).toLocaleDateString("mn-MN")}</td>
+        </tr>
+        ${custOpen === c.key ? `<tr class="sub"><td colspan="6">${c.orders.map(o => `
+          <div class="li"><div class="num" style="width:44px">#${o.id}</div>
+            <div class="nm">${o.items.map(i => `${esc(i.name)} (${esc(i.size)}) ×${i.qty}`).join(", ")}</div>
+            <span class="pill ${o.status}">${STATUS[o.status]}</span>
+            <div class="num" style="min-width:80px;text-align:right">${fmt(o.total)}</div></div>`).join("")}</td></tr>` : ""}`).join("")}</tbody></table>`
+      : `<div class="empty">${all.length ? "Олдсонгүй" : "Үйлчлүүлэгч алга"}</div>`}`;
+
+  const cq = document.getElementById("cq");
+  cq.oninput = () => { custQuery = cq.value; renderCustomers(); const n = document.getElementById("cq"); n.focus(); n.setSelectionRange(n.value.length, n.value.length); };
+  document.getElementById("cs").onchange = e => { custSort = e.target.value; renderCustomers(); };
+  document.getElementById("copyem").onclick = async () => {
+    const emails = [...new Set(list.flatMap(c => c.emails))];
+    try { await navigator.clipboard.writeText(emails.join(", ")); toast(`${emails.length} и-мэйл хуулагдлаа`); }
+    catch { toast("Хуулж чадсангүй", true); }
+  };
+  $app.querySelectorAll("tr[data-c]").forEach(r => r.onclick = e => {
+    if (e.target.closest("a")) return;
+    custOpen = custOpen === r.dataset.c ? null : r.dataset.c; renderCustomers();
+  });
+}
+
 /* ---------- Dashboard ---------- */
 const DAY = 864e5;
 const dayKey = d => { d = new Date(d); return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`; };
+const monthKey = d => { d = new Date(d); return `${d.getFullYear()}-${d.getMonth() + 1}`; };
 const shortDate = d => `${d.getMonth() + 1}/${d.getDate()}`;
+const startOfDay = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const isoDay = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+const MONTHS = ["1-р сар","2-р сар","3-р сар","4-р сар","5-р сар","6-р сар","7-р сар","8-р сар","9-р сар","10-р сар","11-р сар","12-р сар"];
+let dashRange = { key: "30d", from: "", to: "" };
+
+// [from, to) as dates plus a label for the chosen range
+function rangeBounds(){
+  const today = startOfDay(new Date()), tomorrow = new Date(today.getTime() + DAY);
+  switch (dashRange.key) {
+    case "7d": return { from: new Date(today - 6 * DAY), to: tomorrow, label: "Сүүлийн 7 хоног" };
+    case "month": return { from: new Date(today.getFullYear(), today.getMonth(), 1), to: tomorrow, label: "Энэ сар" };
+    case "year": return { from: new Date(today.getFullYear(), 0, 1), to: tomorrow, label: "Энэ жил" };
+    case "custom": {
+      const f = dashRange.from ? new Date(dashRange.from + "T00:00") : new Date(today - 29 * DAY);
+      const t = dashRange.to ? new Date(new Date(dashRange.to + "T00:00").getTime() + DAY) : tomorrow;
+      return t > f ? { from: f, to: t, label: `${isoDay(f)} — ${isoDay(new Date(t - DAY))}` } : { from: t, to: new Date(f.getTime() + DAY), label: "Огноо буруу" };
+    }
+    default: return { from: new Date(today - 29 * DAY), to: tomorrow, label: "Сүүлийн 30 хоног" };
+  }
+}
 
 function renderDashboard(){
-  const now = new Date();
+  const { from, to, label } = rangeBounds();
+  const inRange = o => { const d = new Date(o.createdAt); return d >= from && d < to; };
   const live = orders.filter(o => o.status !== "cancelled");
   const earned = live.filter(o => o.status === "paid" || o.status === "shipped");   // money actually received
-  const thisMonth = o => { const d = new Date(o.createdAt); return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth(); };
   const sum = list => list.reduce((a, o) => a + o.total, 0);
   const waiting = orders.filter(o => o.status === "new");
   const toShip = orders.filter(o => o.status === "paid");
+  const rangeEarned = earned.filter(inRange), rangeLive = live.filter(inRange);
 
-  // Revenue per day, last 30 days
-  const byDay = {};
-  earned.forEach(o => { const k = dayKey(o.createdAt); byDay[k] = (byDay[k] || 0) + o.total; });
-  const days = [];
-  for (let i = 29; i >= 0; i--) { const d = new Date(now - i * DAY); days.push({ d, v: byDay[dayKey(d)] || 0 }); }
+  // Revenue buckets: per day for up to ~2 months, per month beyond that
+  const spanDays = Math.round((to - from) / DAY);
+  const monthly = spanDays > 62;
+  const buckets = {};
+  rangeEarned.forEach(o => { const k = monthly ? monthKey(o.createdAt) : dayKey(o.createdAt); buckets[k] = (buckets[k] || 0) + o.total; });
+  const points = [];
+  if (monthly) {
+    for (let d = new Date(from.getFullYear(), from.getMonth(), 1); d < to; d = new Date(d.getFullYear(), d.getMonth() + 1, 1))
+      points.push({ label: `${d.getMonth() + 1}/${String(d.getFullYear()).slice(2)}`, tip: `${d.getFullYear()} ${MONTHS[d.getMonth()]}`, v: buckets[monthKey(d)] || 0 });
+  } else {
+    for (let d = new Date(from); d < to; d = new Date(d.getTime() + DAY))
+      points.push({ label: shortDate(d), tip: isoDay(d), v: buckets[dayKey(d)] || 0 });
+  }
 
   // Low stock (tracked sizes with 3 or fewer left)
   const low = [];
   products.forEach(p => sizesOf(p).forEach(sz => { const n = p.stock[sz]; if (Number.isInteger(n) && n <= 3) low.push({ p, sz, n }); }));
   low.sort((a, b) => a.n - b.n);
 
-  // Best sellers by quantity
+  // Best sellers by quantity in the range
   const sold = {};
-  live.forEach(o => o.items.forEach(i => {
+  rangeLive.forEach(o => o.items.forEach(i => {
     const r = sold[i.id] || (sold[i.id] = { id: i.id, name: i.name, qty: 0, sum: 0 });
     r.qty += i.qty; r.sum += i.qty * i.price;
   }));
   const top = Object.values(sold).sort((a, b) => b.qty - a.qty).slice(0, 5);
   const topMax = Math.max(1, ...top.map(t => t.qty));
   const thumb = id => { const p = products.find(x => x.id === id); return p ? art(p) : ""; };
+  const avg = rangeEarned.length ? Math.round(sum(rangeEarned) / rangeEarned.length) : 0;
+  const R = (k, t) => `<button data-r="${k}" class="${dashRange.key === k ? "on" : ""}">${t}</button>`;
 
   $app.innerHTML = `<div class="dash">
+    <div class="ranges">
+      ${R("7d", "7 хоног")}${R("30d", "30 хоног")}${R("month", "Энэ сар")}${R("year", "Энэ жил")}
+      <span class="custom${dashRange.key === "custom" ? " on" : ""}">
+        <input type="date" id="rf" value="${esc(dashRange.from || isoDay(from))}" max="${isoDay(new Date())}">
+        <span>—</span>
+        <input type="date" id="rt" value="${esc(dashRange.to || isoDay(new Date(to - DAY)))}" max="${isoDay(new Date())}">
+      </span>
+    </div>
     <div class="tiles">
-      <button class="tile" data-go="orders"><span>Энэ сарын орлого</span><b>${fmt(sum(earned.filter(thisMonth)))}</b><small>Төлбөр орсон захиалгаар</small></button>
-      <button class="tile" data-go="orders"><span>Энэ сарын захиалга</span><b>${live.filter(thisMonth).length}</b><small>Нийт ${live.length} захиалга</small></button>
+      <button class="tile" data-go="orders"><span>Орлого · ${esc(label)}</span><b>${fmt(sum(rangeEarned))}</b><small>${rangeEarned.length} төлөгдсөн · дундаж ${fmt(avg)}</small></button>
+      <button class="tile" data-go="orders"><span>Захиалга · ${esc(label)}</span><b>${rangeLive.length}</b><small>Нийт ${live.length} захиалга</small></button>
       <button class="tile${waiting.length ? " alert" : ""}" data-go="orders"><span>Төлбөр хүлээгдэж буй</span><b>${waiting.length}</b><small>${fmt(sum(waiting))}</small></button>
       <button class="tile${toShip.length ? " alert" : ""}" data-go="orders"><span>Илгээх ёстой</span><b>${toShip.length}</b><small>Төлбөр орсон, хүргээгүй</small></button>
     </div>
 
     <div class="panel">
-      <h2>Сүүлийн 30 хоногийн орлого <small>Нийт ${fmt(days.reduce((a, x) => a + x.v, 0))}</small></h2>
+      <h2>Орлого · ${esc(label)} <small>${monthly ? "сараар" : "өдрөөр"} · нийт ${fmt(sum(rangeEarned))}</small></h2>
       <div class="chart" id="chart"></div>
     </div>
 
     <div class="cols">
       <div class="panel">
-        <h2>Их зарагдсан бараа</h2>
+        <h2>Их зарагдсан бараа <small>${esc(label)}</small></h2>
         ${top.length ? top.map(t => `<div class="li"><div class="th">${thumb(t.id)}</div>
           <div class="nm">${esc(t.name)}<div class="bar" style="width:${Math.max(4, t.qty / topMax * 100)}%"></div></div>
           <div class="num">${t.qty} ш</div></div>`).join("") : `<div class="empty" style="padding:24px 0">Борлуулалт алга</div>`}
@@ -523,46 +738,54 @@ function renderDashboard(){
     </div>
   </div>`;
 
-  drawRevenueChart(document.getElementById("chart"), days);
+  drawRevenueChart(document.getElementById("chart"), points, label);
+  $app.querySelectorAll("[data-r]").forEach(b => b.onclick = () => { dashRange = { key: b.dataset.r, from: "", to: "" }; renderDashboard(); });
+  const setCustom = () => { dashRange = { key: "custom", from: document.getElementById("rf").value, to: document.getElementById("rt").value }; renderDashboard(); };
+  document.getElementById("rf").onchange = setCustom;
+  document.getElementById("rt").onchange = setCustom;
   $app.querySelectorAll("[data-go]").forEach(b => b.onclick = () => { tab = b.dataset.go; render(); });
   $app.querySelectorAll("[data-edit]").forEach(b => b.onclick = () => openEditor(products.find(p => p.id == b.dataset.edit)));
 }
 
 // Single-series area chart with a crosshair tooltip; no library needed.
-function drawRevenueChart(el, days){
+// points: [{ label (axis), tip (tooltip), v }]
+function drawRevenueChart(el, points, title){
   // Drawn at the real pixel width so axis text keeps its size on phones.
   const W = Math.max(300, Math.round(el.clientWidth) || 900), H = W < 500 ? 180 : 240, L = 56, R = 8, T = 10, B = 24;
-  const raw = Math.max(...days.map(d => d.v));
+  const n = points.length, last = n - 1;
+  const raw = Math.max(0, ...points.map(d => d.v));
   const step = raw > 0 ? Math.pow(10, Math.floor(Math.log10(raw))) : 1;
   const max = raw > 0 ? Math.ceil(raw / step) * step : 100000;
-  const x = i => L + i * (W - L - R) / (days.length - 1);
+  const x = i => n === 1 ? (L + W - R) / 2 : L + i * (W - L - R) / last;
   const y = v => T + (1 - v / max) * (H - T - B);
   const short = v => v >= 1e6 ? (v / 1e6).toFixed(v % 1e6 ? 1 : 0) + "сая" : v >= 1e3 ? Math.round(v / 1e3) + "мян" : String(v);
-  const pts = days.map((d, i) => `${x(i).toFixed(1)},${y(d.v).toFixed(1)}`).join(" ");
+  const pts = points.map((d, i) => `${x(i).toFixed(1)},${y(d.v).toFixed(1)}`).join(" ");
   const grid = [0, .5, 1].map(f => `<line x1="${L}" x2="${W - R}" y1="${y(max * f)}" y2="${y(max * f)}" stroke="#e6e6e6"/>
     <text x="${L - 8}" y="${y(max * f) + 3}" text-anchor="end" font-size="9" fill="#6b6b6b">${short(max * f)}</text>`).join("");
-  const xl = [0, 14, 29].map(i => `<text x="${x(i)}" y="${H - 6}" text-anchor="${i === 0 ? "start" : i === 29 ? "end" : "middle"}" font-size="9" fill="#6b6b6b">${shortDate(days[i].d)}</text>`).join("");
-  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Сүүлийн 30 хоногийн өдөр тутмын орлого">
+  const ticks = [...new Set([0, Math.round(last / 2), last])];
+  const xl = ticks.map(i => `<text x="${x(i)}" y="${H - 6}" text-anchor="${ticks.length > 1 && i === 0 ? "start" : ticks.length > 1 && i === last ? "end" : "middle"}" font-size="9" fill="#6b6b6b">${esc(points[i].label)}</text>`).join("");
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Орлого: ${esc(title)}">
       ${grid}${xl}
-      <polygon points="${x(0)},${y(0)} ${pts} ${x(days.length - 1)},${y(0)}" fill="#c51811" fill-opacity=".08"/>
-      <polyline points="${pts}" fill="none" stroke="#c51811" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      ${n > 1 ? `<polygon points="${x(0)},${y(0)} ${pts} ${x(last)},${y(0)}" fill="#c51811" fill-opacity=".08"/>
+      <polyline points="${pts}" fill="none" stroke="#c51811" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`
+      : `<circle cx="${x(0)}" cy="${y(points[0].v)}" r="4" fill="#c51811"/>`}
       <line id="cx" y1="${T}" y2="${H - B}" stroke="#000" stroke-width="1" visibility="hidden"/>
       <circle id="cd" r="4.5" fill="#c51811" stroke="#fff" stroke-width="2" visibility="hidden"/>
       <rect id="hit" x="${L}" y="0" width="${W - L - R}" height="${H}" fill="transparent"/>
     </svg>
     <div class="tip" id="tip"></div>
-    <details><summary>Хүснэгтээр харах</summary><table>${days.filter(d => d.v).map(d => `<tr><td>${shortDate(d.d)}</td><td style="text-align:right">${fmt(d.v)}</td></tr>`).join("") || "<tr><td>Орлого алга</td></tr>"}</table></details>`;
+    <details><summary>Хүснэгтээр харах</summary><table>${points.filter(d => d.v).map(d => `<tr><td>${esc(d.tip)}</td><td style="text-align:right">${fmt(d.v)}</td></tr>`).join("") || "<tr><td>Орлого алга</td></tr>"}</table></details>`;
   const svg = el.querySelector("svg"), tip = el.querySelector("#tip"), cx = el.querySelector("#cx"), cd = el.querySelector("#cd");
   const move = e => {
     const r = svg.getBoundingClientRect();
     const px = ((e.touches ? e.touches[0].clientX : e.clientX) - r.left) / r.width * W;
-    const i = Math.max(0, Math.min(days.length - 1, Math.round((px - L) / (W - L - R) * (days.length - 1))));
-    const d = days[i];
+    const i = n === 1 ? 0 : Math.max(0, Math.min(last, Math.round((px - L) / (W - L - R) * last)));
+    const d = points[i];
     cx.setAttribute("x1", x(i)); cx.setAttribute("x2", x(i)); cd.setAttribute("cx", x(i)); cd.setAttribute("cy", y(d.v));
     [cx, cd].forEach(n => n.setAttribute("visibility", "visible"));
     tip.style.display = "block";
     tip.style.left = (x(i) / W * r.width) + "px"; tip.style.top = (y(d.v) / H * r.height) + "px";
-    tip.innerHTML = `${shortDate(d.d)} · <b>${fmt(d.v)}</b>`;
+    tip.innerHTML = `${esc(d.tip)} · <b>${fmt(d.v)}</b>`;
   };
   const hide = () => { tip.style.display = "none"; [cx, cd].forEach(n => n.setAttribute("visibility", "hidden")); };
   const hit = el.querySelector("#hit");
@@ -575,7 +798,7 @@ function render(){
   const fresh = orders.filter(o => o.status === "new").length;
   document.getElementById("badge").innerHTML = fresh ? `<b>${fresh}</b>` : "";
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.tab === tab));
-  ({ dashboard: renderDashboard, products: renderProducts, orders: renderOrders, coupons: renderCoupons, settings: renderSettings })[tab]();
+  ({ dashboard: renderDashboard, products: renderProducts, orders: renderOrders, customers: renderCustomers, coupons: renderCoupons, settings: renderSettings })[tab]();
   window.scrollTo(0, 0);
 }
 document.querySelectorAll("nav button").forEach(b => b.onclick = () => { tab = b.dataset.tab; render(); });

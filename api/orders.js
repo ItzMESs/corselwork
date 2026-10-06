@@ -117,6 +117,7 @@ export default route({
       if (!STATUSES.includes(b.status)) throw new HttpError(400, "Төлөв буруу");
       data.status = b.status;
     }
+    if (b.adminNote !== undefined) data.adminNote = str(b.adminNote, "Тэмдэглэл", { max: 2000 });
     if (b.deliveryFee !== undefined) {
       data.deliveryFee = (b.deliveryFee === "" || b.deliveryFee === null) ? null : int(b.deliveryFee, "Хүргэлтийн төлбөр");
       if (data.deliveryFee < 0) throw new HttpError(400, "Хүргэлтийн төлбөр буруу");
@@ -125,7 +126,9 @@ export default route({
       await tx.$queryRaw`SELECT id FROM "Order" WHERE id = ${id} FOR UPDATE`;
       const cur = await tx.order.findUnique({ where: { id } });
       if (!cur) throw new HttpError(404, "Захиалга олдсонгүй");
-      if (cur.status === "cancelled") throw new HttpError(400, "Цуцалсан захиалгыг өөрчлөх боломжгүй");
+      // A cancelled order keeps its status and fee; only the internal note can still change.
+      if (cur.status === "cancelled" && (data.status !== undefined || data.deliveryFee !== undefined))
+        throw new HttpError(400, "Цуцалсан захиалгыг өөрчлөх боломжгүй");
       if (data.status === "cancelled") await adjustStock(tx, cur.items, +1);
       const updated = await tx.order.update({ where: { id }, data });
       return { updated, changed: data.status && data.status !== cur.status };

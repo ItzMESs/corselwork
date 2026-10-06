@@ -76,6 +76,19 @@
   .addcart:hover:not(:disabled)::before{transform:rotate(-90deg)}
   .addcart:hover:not(:disabled)::after{transform:rotate(90deg)}
   .addcart:disabled{background:none;color:var(--red)}
+  /* Product gallery */
+  .gal{position:relative;margin:0 auto 36px;width:min(420px,88vw)}
+  .gal .img{width:100%;margin:0;touch-action:pan-y}
+  .gnav{position:absolute;top:calc(50% - 40px);width:36px;height:36px;font-size:26px;line-height:1;display:grid;place-items:center;color:var(--fg)}
+  .gnav.prev{left:-40px}.gnav.next{right:-40px}
+  @media (max-width:560px){.gnav.prev{left:-6px}.gnav.next{right:-6px}}
+  .thumbs{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+  .thumbs button{width:52px;height:52px;border:1.5px solid transparent;padding:3px}
+  .thumbs button.on{border-color:var(--fg)}
+  .thumbs img{width:100%;height:100%;object-fit:contain;display:block}
+  /* Grid: show the second photo on hover (mouse devices only) */
+  .item img.alt{opacity:0;transition:opacity .25s}
+  @media (hover:hover){.item.has-alt:hover img.alt{opacity:1}.item.has-alt:hover img:not(.alt){opacity:0}}
   .back{display:inline-block;margin-bottom:12px;font-size:9px;color:var(--muted)}
 
   /* Cart */
@@ -227,7 +240,7 @@ async function loadProducts(){
 /* ---------- Views ---------- */
 function viewHome(){
   $app.innerHTML = PRODUCTS.length ? `<div class="grid">${PRODUCTS.map(p =>
-    `<a class="item${p.soldOut?" sold":""}" href="#/product/${p.id}" title="${name(p)}">${art(p)}${onSale(p) && !p.soldOut ? `<span class="salebadge">−${Math.round((1 - p.price / p.compareAt) * 100)}%</span>` : ""}</a>`).join("")}</div>`
+    `<a class="item${p.soldOut?" sold":""}${p.images[1]?" has-alt":""}" href="#/product/${p.id}" title="${name(p)}">${art(p)}${p.images[1] ? `<img class="alt" src="${esc(p.images[1].url)}" alt="" loading="lazy">` : ""}${onSale(p) && !p.soldOut ? `<span class="salebadge">−${Math.round((1 - p.price / p.compareAt) * 100)}%</span>` : ""}</a>`).join("")}</div>`
     : `<div class="empty">${T[lang].none}</div>`;
 }
 
@@ -236,11 +249,17 @@ function viewProduct(id){
   if (!p) return viewHome();
   const sizes = sizesOf(p);
   let sel = sizes.find(s => left(p, s) > 0) || sizes[0];
+  const imgs = p.images.map(i => i.url);
+  let gi = 0;   // current gallery image, kept when the size buttons redraw the page
   const draw = () => {
     const n = left(p, sel), out = p.soldOut || n <= 0;
     $app.innerHTML = `<div class="product">
       <a class="back" href="#/">${t.back}</a>
-      <div class="img">${art(p)}</div>
+      <div class="gal">
+        <div class="img" id="gimg">${imgs.length ? `<img src="${esc(imgs[gi])}" alt="${name(p)}">` : art(p)}</div>
+        ${imgs.length > 1 ? `<button class="gnav prev" aria-label="Өмнөх зураг">‹</button><button class="gnav next" aria-label="Дараах зураг">›</button>
+        <div class="thumbs">${imgs.map((u, i) => `<button data-gi="${i}" class="${i === gi ? "on" : ""}" aria-label="Зураг ${i + 1}"><img src="${esc(u)}" alt="" loading="lazy"></button>`).join("")}</div>` : ""}
+      </div>
       <h1>${name(p)}</h1>
       ${p.description ? `<p style="white-space:pre-line">${esc(p.description)}</p>` : ""}
       <div class="row">${sizes.map(s => `<button class="size${s===sel?" on":""}${left(p,s)<=0?" out":""}" data-s="${esc(s)}">${esc(s)}</button>`).join("")}</div>
@@ -249,6 +268,24 @@ function viewProduct(id){
       <button class="add addcart" ${out?"disabled":""}>${out ? t.sold : t.add}</button>
     </div>`;
     $app.querySelectorAll(".size").forEach(b => b.onclick = () => { sel = b.dataset.s; draw(); });
+    if (imgs.length > 1) {
+      const show = i => {
+        gi = (i + imgs.length) % imgs.length;
+        document.querySelector("#gimg img").src = imgs[gi];
+        $app.querySelectorAll(".thumbs button").forEach((b, k) => b.classList.toggle("on", k === gi));
+      };
+      $app.querySelector(".gnav.prev").onclick = () => show(gi - 1);
+      $app.querySelector(".gnav.next").onclick = () => show(gi + 1);
+      $app.querySelectorAll(".thumbs button").forEach(b => b.onclick = () => show(+b.dataset.gi));
+      // swipe on phones
+      const g = document.getElementById("gimg"); let x0 = null;
+      g.addEventListener("touchstart", e => { x0 = e.touches[0].clientX; }, { passive: true });
+      g.addEventListener("touchend", e => {
+        if (x0 === null) return;
+        const dx = e.changedTouches[0].clientX - x0; x0 = null;
+        if (Math.abs(dx) > 40) show(gi + (dx < 0 ? 1 : -1));
+      });
+    }
     $app.querySelector(".add").onclick = () => {
       if (inCart(p.id, sel) + 1 > left(p, sel)) return toast(t.noMore);
       const ex = cart.find(c => c.id===p.id && c.s===sel);

@@ -17,10 +17,22 @@ model Product {
   stock       Json?    // { "S": 3, "M": 0 } — a size missing from the map has unlimited stock
   description String   @default("")
   sold        Boolean  @default(false)
-  image       Bytes?
+  image       Bytes?   // cover image (first in the gallery)
   imageType   String?
+  images      ProductImage[] // extra gallery images after the cover
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model ProductImage {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  position  Int
+  data      Bytes
+  type      String
+
+  @@index([productId])
 }
 
 model Order {
@@ -44,6 +56,7 @@ model Order {
   total      Int      // items after discount, without delivery
   deliveryFee Int?    // set by admin later; null = not calculated yet
   couponCode String?
+  adminNote  String   @default("") // internal note, only visible in admin
 }
 
 model Coupon {

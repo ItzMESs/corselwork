@@ -4,21 +4,30 @@ import { sizesOf, soldOut } from "../lib/stock.js";
 
 const TYPES = ["image/png", "image/jpeg", "image/webp"];
 const MAX_IMAGE = 2 * 1024 * 1024;
-const select = { id:true, name:true, nameEn:true, price:true, compareAt:true, sizes:true, stock:true, description:true, sold:true, imageType:true, updatedAt:true };
+const MAX_IMAGES = 8;
+const select = {
+  id:true, name:true, nameEn:true, price:true, compareAt:true, sizes:true, stock:true, description:true, sold:true, imageType:true, updatedAt:true,
+  images: { select: { id:true }, orderBy: { position: "asc" } },
+};
 
-// Image bytes are served separately by /api/image; the list only carries its URL.
+// Image bytes are served separately by /api/image; the list only carries URLs.
+// `images` is the whole gallery (cover first), `image` is the cover for grids and emails.
 // `sold` is the manual flag, `soldOut` also covers stock running out.
-const toPublic = ({ imageType, updatedAt, ...p }) => ({
-  ...p, stock: p.stock || {}, soldOut: soldOut(p),
-  image: imageType ? `/api/image?id=${p.id}&v=${updatedAt.getTime()}` : null,
-});
+function toPublic({ imageType, updatedAt, images, ...p }){
+  const v = updatedAt.getTime();
+  const gallery = [
+    ...(imageType ? [{ ref: "cover", url: `/api/image?id=${p.id}&v=${v}` }] : []),
+    ...images.map(i => ({ ref: i.id, url: `/api/image?img=${i.id}&v=${v}` })),
+  ];
+  return { ...p, stock: p.stock || {}, soldOut: soldOut(p), image: gallery[0]?.url || null, images: gallery };
+}
 
 function parseImage(dataUrl){
   const m = /^data:([\w/+.-]+);base64,(.+)$/.exec(dataUrl);
   if (!m || !TYPES.includes(m[1])) throw new HttpError(400, "Зургийн формат буруу (PNG/JPG/WEBP)");
   const buf = Buffer.from(m[2], "base64");
   if (buf.length > MAX_IMAGE) throw new HttpError(400, "Зураг 2MB-аас их байна");
-  return { image: buf, imageType: m[1] };
+  return { data: buf, type: m[1] };
 }
 
 function fields(b){
@@ -44,10 +53,50 @@ function fields(b){
     stock[s] = n;
   }
   data.stock = stock;
-  // image: data URL = replace, null = remove, omitted = keep
-  if (b.image === null) Object.assign(data, { image: null, imageType: null });
-  else if (typeof b.image === "string") Object.assign(data, parseImage(b.image));
   return data;
+}
+
+// Gallery sent by the admin, in display order. Each entry is
+//   { keep: "cover" | <ProductImage id> }  an image already stored for this product, or
+//   { data: "data:image/...;base64,..." }  a new upload.
+// Omitted (undefined) = leave the gallery as it is.
+function parseGallery(list){
+  if (list === undefined) return undefined;
+  if (!Array.isArray(list)) throw new HttpError(400, "Зургийн жагсаалт буруу");
+  if (list.length > MAX_IMAGES) throw new HttpError(400, `Хамгийн ихдээ ${MAX_IMAGES} зураг оруулна`);
+  return list.map(e => {
+    if (e && typeof e.data === "string") return parseImage(e.data);
+    if (e && (e.keep === "cover" || Number.isInteger(e.keep))) return { keep: e.keep };
+    throw new HttpError(400, "Зургийн жагсаалт буруу");
+  });
+}
+
+// Resolves kept images to their bytes, then rewrites cover + extras in the new order.
+async function saveGallery(tx, productId, gallery){
+  const current = await tx.product.findUnique({ where: { id: productId }, select: { image: true, imageType: true } });
+  const extras = await tx.productImage.findMany({ where: { productId } });
+  const resolved = gallery.map(g => {
+    if (!g.keep) return g;
+    if (g.keep === "cover") {
+      if (!current?.image) throw new HttpError(400, "Зураг олдсонгүй, хуудсаа дахин ачаална уу");
+      return { data: Buffer.from(current.image), type: current.imageType };
+    }
+    const x = extras.find(i => i.id === g.keep);
+    if (!x) throw new HttpError(400, "Зураг олдсонгүй, хуудсаа дахин ачаална уу");
+    return { data: Buffer.from(x.data), type: x.type };
+  });
+  const [cover, ...rest] = resolved;
+  await tx.productImage.deleteMany({ where: { productId } });
+  if (rest.length) await tx.productImage.createMany({ data: rest.map((r, i) => ({ productId, position: i, data: r.data, type: r.type })) });
+  await tx.product.update({ where: { id: productId }, data: { image: cover?.data ?? null, imageType: cover?.type ?? null } });
+}
+
+// Accepts the old single `image` field too (data URL = replace cover, null = remove all).
+function legacyGallery(b){
+  if (b.images !== undefined) return parseGallery(b.images);
+  if (b.image === null) return [];
+  if (typeof b.image === "string" && b.image.startsWith("data:")) return [parseImage(b.image)];   // ignore echoed URLs
+  return undefined;
 }
 
 export default route({
@@ -57,13 +106,25 @@ export default route({
     res.json(list.map(toPublic));
   },
   POST: admin(async (req, res) => {
-    const p = await prisma.product.create({ data: fields(body(req)), select });
+    const b = body(req), data = fields(b), gallery = legacyGallery(b);
+    if (gallery?.some(g => g.keep)) throw new HttpError(400, "Зургийн жагсаалт буруу");
+    const p = await prisma.$transaction(async tx => {
+      const created = await tx.product.create({ data, select: { id: true } });
+      if (gallery?.length) await saveGallery(tx, created.id, gallery);
+      return tx.product.findUnique({ where: { id: created.id }, select });
+    }, { timeout: 20000 });
     res.status(201).json(toPublic(p));
   }),
   PUT: admin(async (req, res) => {
     const id = int(req.query.id, "id");
-    const p = await prisma.product.update({ where: { id }, data: fields(body(req)), select })
-      .catch(e => { throw e.code === "P2025" ? new HttpError(404, "Бараа олдсонгүй") : e; });
+    const b = body(req), data = fields(b), gallery = legacyGallery(b);
+    const p = await prisma.$transaction(async tx => {
+      const found = await tx.product.findUnique({ where: { id }, select: { id: true } });
+      if (!found) throw new HttpError(404, "Бараа олдсонгүй");
+      await tx.product.update({ where: { id }, data });
+      if (gallery !== undefined) await saveGallery(tx, id, gallery);
+      return tx.product.findUnique({ where: { id }, select });
+    }, { timeout: 20000 });
     res.json(toPublic(p));
   }),
   DELETE: admin(async (req, res) => {
