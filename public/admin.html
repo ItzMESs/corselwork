@@ -95,6 +95,10 @@
   .order.st-shipped,.order.st-cancelled{border-color:var(--line);color:var(--muted)}
   .order.st-cancelled ul{text-decoration:line-through}
   .settings{border:1.5px solid var(--fg);max-width:420px}
+  .order .fee{display:flex;gap:8px;align-items:center;font-size:10px;margin-bottom:10px}
+  .order .fee span{color:var(--muted);flex:1}
+  .order .fee input{width:120px;padding:6px}
+  .order .fee button{padding:6px 10px;font-size:9px;font-weight:800;border:1.5px solid var(--fg)}
   .empty{padding:60px 0;text-align:center;color:var(--muted)}
 
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--fg);color:var(--bg);padding:10px 16px;font-size:9px;font-weight:600;transition:.25s;pointer-events:none;z-index:30}
@@ -174,7 +178,7 @@ function renderProducts(){
       <div class="card${p.soldOut ? " sold" : ""}" data-id="${p.id}">
         <div class="pic">${art(p)}</div>
         <div class="nm">${esc(p.name)}</div>
-        <div class="pr">${fmt(p.price)}</div>
+        <div class="pr">${p.compareAt > p.price ? `<s>${fmt(p.compareAt)}</s> <span style="color:var(--red)">${fmt(p.price)}</span>` : fmt(p.price)}</div>
         <div class="pr">${stockLabel(p)}</div>
       </div>`).join("")}
   </div>`;
@@ -200,8 +204,9 @@ function openEditor(p){
     <label class="t">Нэр</label><input name="name" required maxlength="120" value="${esc(d.name)}">
     <div class="two">
       <div><label class="t">Үнэ (₮)</label><input name="price" type="number" min="0" required value="${d.price}"></div>
-      <div><label class="t">Хэмжээ (таслалаар)</label><input name="sizes" value="${esc(d.sizes.join(", "))}" placeholder="S, M, L"></div>
+      <div><label class="t">Хуучин үнэ (хямдрал)</label><input name="compareAt" type="number" min="0" value="${d.compareAt ?? ""}" placeholder="Хямдралгүй бол хоосон"></div>
     </div>
+    <label class="t">Хэмжээ (таслалаар)</label><input name="sizes" value="${esc(d.sizes.join(", "))}" placeholder="S, M, L">
     <label class="t">Үлдэгдэл (хоосон орхивол хязгааргүй)</label>
     <div class="stockbox" id="stockbox"></div>
     <label class="t">Тайлбар</label><textarea name="description" rows="3">${esc(d.description)}</textarea>
@@ -242,7 +247,7 @@ function openEditor(p){
     e.preventDefault();
     const btn = form.querySelector(".btn.dark"); btn.disabled = true; btn.textContent = "Хадгалж байна…";
     const payload = {
-      name: form.name.value, nameEn: d.nameEn, price: +form.price.value,
+      name: form.name.value, nameEn: d.nameEn, price: +form.price.value, compareAt: form.compareAt.value,
       sizes: form.sizes.value.split(",").map(s => s.trim()).filter(Boolean),
       description: form.description.value, sold: form.sold.checked, image: newImage,
       stock: Object.fromEntries([...form.querySelectorAll("[data-stock]")].filter(i => i.value !== "").map(i => [i.dataset.stock, +i.value])),
@@ -294,8 +299,13 @@ function renderOrders(){
       <div class="kv"><span>Төлбөр</span><span class="v">${o.payment === "qpay" ? "QPay" : "Дансаар"}</span></div>
       <ul>${o.items.map(i => `<li><span>${esc(i.name)} (${esc(i.size)}) × ${i.qty}</span><span>${fmt(i.price * i.qty)}</span></li>`).join("")}
         ${o.couponCode ? `<li style="color:var(--red)"><span>Купон ${esc(o.couponCode)}</span><span>−${fmt(o.discount)}</span></li>` : ""}</ul>
+      <form class="fee" data-fee="${o.id}">
+        <span>Хүргэлтийн төлбөр</span>
+        <input name="fee" type="number" min="0" step="100" value="${o.deliveryFee ?? ""}" placeholder="Тооцоогүй">
+        <button>Хадгалах</button>
+      </form>
       <div class="foot">
-        <b>${fmt(o.total)}</b>
+        <b>${fmt(o.total + (o.deliveryFee || 0))}${o.deliveryFee == null ? " + хүргэлт" : ""}</b>
         <button class="x" data-del="${o.id}">Устгах</button>
       </div>
     </div>`;
@@ -308,6 +318,12 @@ function renderOrders(){
       if (sel.value === "cancelled") products = await api("products");
       render(); toast("Төлөв шинэчлэгдлээ");
     } catch { sel.value = o.status; }
+  });
+  $app.querySelectorAll("[data-fee]").forEach(f => f.onsubmit = async e => {
+    e.preventDefault();
+    const o = orders.find(x => x.id == f.dataset.fee);
+    Object.assign(o, await call("orders?id=" + o.id, { method: "PATCH", body: { deliveryFee: f.fee.value } }));
+    render(); toast("Хүргэлтийн төлбөр хадгалагдлаа");
   });
   $app.querySelectorAll("[data-del]").forEach(b => b.onclick = async () => {
     if (!confirm("Энэ захиалгыг бүр мөсөн устгах уу? (Үлдэгдэл буцаахгүй. Буцаах бол эхлээд \"Цуцалсан\" болгоно уу)")) return;

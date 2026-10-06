@@ -69,6 +69,13 @@
   .disc{display:flex;justify-content:space-between;color:var(--red);font-size:10px;margin-top:12px}
   .total{display:flex;justify-content:space-between;font-weight:800;font-size:12px;margin:20px 0 6px}
   .empty{text-align:center;color:var(--muted);padding:60px 0}
+  footer{display:flex;justify-content:center;gap:24px}
+  .old{color:var(--muted);font-weight:400}
+  .new{color:var(--red)}
+  .salebadge{position:absolute;top:2px;right:2px;background:var(--red);color:#fff;font-size:8px;font-weight:800;padding:1px 4px}
+  .shiprow{display:flex;justify-content:space-between;font-size:10px;margin-top:12px;color:var(--muted)}
+  .ulink{text-decoration:underline}
+  .kv b.st-new{color:var(--red)}
   .size.out{color:var(--muted);border-color:var(--line);text-decoration:line-through}
   .stockleft{color:var(--red);font-size:9px;font-weight:600;margin-top:6px}
   .btnlink{display:grid;place-items:center}
@@ -126,7 +133,7 @@
 
 <main id="app"></main>
 
-<footer><a href="#/about" id="aboutLink"></a></footer>
+<footer><a href="#/track" id="trackLink"></a><a href="#/about" id="aboutLink"></a></footer>
 <div class="toast" id="toast"></div>
 
 <script src="data.js"></script>
@@ -142,7 +149,11 @@ const T = {
       fCity:"Хот / Аймаг",fDistrict:"Дүүрэг / Сум",fKhoroo:"Хороо / Баг",fBuilding:"Байр / Гудамж",fApt:"Тоот",fNote:"Нэмэлт мэдээлэл (орц, давхар, код, тэмдэглэгээ)",choose:"Сонгох",
       bank:"Дансаар шилжүүлэх",qpay:"QPay",soon:"Тун удахгүй",
       done:"Захиалга хүлээн авлаа",orderNo:"Захиалгын дугаар",payNow:"Доорх дансанд төлбөрөө шилжүүлнэ үү. Төлбөр орсны дараа захиалга баталгаажна.",
-      bName:"Банк",bAcc:"Дансны дугаар",bHolder:"Хүлээн авагч",bRef:"Гүйлгээний утга",amount:"Дүн",copy:"Хуулах",copied:"Хуулагдлаа",home:"НҮҮР ХУУДАС"},
+      bName:"Банк",bAcc:"Дансны дугаар",bHolder:"Хүлээн авагч",bRef:"Гүйлгээний утга",amount:"Дүн",copy:"Хуулах",copied:"Хуулагдлаа",home:"НҮҮР ХУУДАС",
+      ship:"Хүргэлт",shipLater:"Нэмэлтээр тооцогдоно",shipNote:"Хүргэлтийн төлбөр нэмэлтээр тооцогдож, бид тантай холбогдон мэдэгдэнэ.",
+      track:"Захиалга шалгах",trackHint:"Захиалгын дугаар болон захиалга өгөхдөө бичсэн утасны дугаараа оруулна уу.",trackBtn:"ШАЛГАХ",
+      status:"Төлөв",st:{new:"Төлбөр хүлээгдэж байна",paid:"Төлбөр орсон, бэлтгэж байна",shipped:"Хүргэгдсэн",cancelled:"Цуцлагдсан"},
+      itemsT:"Бараа",subtotal:"Барааны дүн",grand:"Нийт төлөх",trackLink:"Захиалгаа дараа нь энд шалгаарай →",date:"Огноо"},
   en:{about:"About us",add:"ADD TO CART",sold:"SOLD OUT",cart:"Cart",empty:"Your cart is empty.",total:"Total",next:"CONTINUE",checkout:"PLACE ORDER",back:"← Back",added:"Added to cart",size:"Size",
       desc:"",left:n=>`${n} left`,noMore:"Not enough stock",
       aboutText:["CORSEL is a clothing label based in Ulaanbaatar, pairing traditional Mongolian ornament and tamga marks with contemporary streetwear.","Each collection is produced in limited numbers and never restocked."],
@@ -152,7 +163,11 @@ const T = {
       fCity:"City / Province",fDistrict:"District / Soum",fKhoroo:"Khoroo / Bag",fBuilding:"Building / Street",fApt:"Apartment no.",fNote:"Additional info (entrance, floor, door code, notes)",choose:"Select",
       bank:"Bank transfer",qpay:"QPay",soon:"Coming soon",
       done:"Order received",orderNo:"Order number",payNow:"Please transfer the payment to the account below. Your order is confirmed once payment arrives.",
-      bName:"Bank",bAcc:"Account number",bHolder:"Account holder",bRef:"Transfer reference",amount:"Amount",copy:"Copy",copied:"Copied",home:"HOME"},
+      bName:"Bank",bAcc:"Account number",bHolder:"Account holder",bRef:"Transfer reference",amount:"Amount",copy:"Copy",copied:"Copied",home:"HOME",
+      ship:"Delivery",shipLater:"Charged separately",shipNote:"Delivery is charged separately; we will contact you with the fee.",
+      track:"Track order",trackHint:"Enter your order number and the phone number you used at checkout.",trackBtn:"CHECK",
+      status:"Status",st:{new:"Awaiting payment",paid:"Paid, preparing",shipped:"Delivered",cancelled:"Cancelled"},
+      itemsT:"Items",subtotal:"Items total",grand:"Total to pay",trackLink:"Track your order here later →",date:"Date"},
 };
 const CITIES = ["Улаанбаатар","Архангай","Баян-Өлгий","Баянхонгор","Булган","Говь-Алтай","Говьсүмбэр","Дархан-Уул","Дорноговь","Дорнод","Дундговь","Завхан","Орхон","Өвөрхангай","Өмнөговь","Сүхбаатар","Сэлэнгэ","Төв","Увс","Ховд","Хөвсгөл","Хэнтий"];
 const UB_DISTRICTS = ["Баянгол","Баянзүрх","Сонгинохайрхан","Сүхбаатар","Хан-Уул","Чингэлтэй","Налайх","Багануур","Багахангай"];
@@ -170,6 +185,8 @@ const name = p => esc(lang === "en" && p.nameEn ? p.nameEn : p.name);
 const byId = id => PRODUCTS.find(p => p.id === id);
 const sizesOf = p => p.sizes.length ? p.sizes : ["OS"];
 const left = (p, s) => Number.isInteger(p.stock[s]) ? p.stock[s] : Infinity;
+const onSale = p => p.compareAt > p.price;
+const priceHtml = p => onSale(p) ? `<s class="old">${fmt(p.compareAt)}</s> <span class="new">${fmt(p.price)}</span>` : fmt(p.price);
 const inCart = (id, s) => cart.filter(c => c.id === id && c.s === s).reduce((a, c) => a + c.q, 0);
 
 function saveCart(){ store.set("corsel-cart", cart); document.getElementById("count").textContent = cart.reduce((a,c)=>a+c.q,0); }
@@ -184,7 +201,7 @@ async function loadProducts(){
 /* ---------- Views ---------- */
 function viewHome(){
   $app.innerHTML = PRODUCTS.length ? `<div class="grid">${PRODUCTS.map(p =>
-    `<a class="item${p.soldOut?" sold":""}" href="#/product/${p.id}" title="${name(p)}">${art(p)}</a>`).join("")}</div>`
+    `<a class="item${p.soldOut?" sold":""}" href="#/product/${p.id}" title="${name(p)}">${art(p)}${onSale(p) && !p.soldOut ? `<span class="salebadge">−${Math.round((1 - p.price / p.compareAt) * 100)}%</span>` : ""}</a>`).join("")}</div>`
     : `<div class="empty">${T[lang].none}</div>`;
 }
 
@@ -201,7 +218,7 @@ function viewProduct(id){
       <h1>${name(p)}</h1>
       ${p.description ? `<p style="white-space:pre-line">${esc(p.description)}</p>` : ""}
       <div class="row">${sizes.map(s => `<button class="size${s===sel?" on":""}${left(p,s)<=0?" out":""}" data-s="${esc(s)}">${esc(s)}</button>`).join("")}</div>
-      <div class="price">${fmt(p.price)}</div>
+      <div class="price">${priceHtml(p)}</div>
       ${!out && n !== Infinity && n <= 5 ? `<div class="stockleft">${t.left(n)}</div>` : ""}
       <button class="add" ${out?"disabled":""}>${out ? t.sold : t.add}</button>
     </div>`;
@@ -229,7 +246,7 @@ function viewCart(){
   $app.innerHTML = `<div class="cart"><h1>${t.cart}</h1>
     ${cart.map((c,i)=>{ const p=byId(c.id); return `<div class="line">
       <a href="#/product/${p.id}">${art(p)}</a>
-      <div class="meta">${name(p)}<small>${t.size}: ${esc(c.s)} · ${fmt(p.price)}</small></div>
+      <div class="meta">${name(p)}<small>${t.size}: ${esc(c.s)} · ${priceHtml(p)}</small></div>
       <div class="qty"><button data-i="${i}" data-d="-1">−</button>${c.q}<button data-i="${i}" data-d="1">+</button></div>
     </div>`; }).join("")}
     <form id="coupon" class="coupon">
@@ -237,6 +254,7 @@ function viewCart(){
       <button>${coupon ? "✕" : t.cApply}</button>
     </form>
     ${coupon ? `<div class="disc"><span>${t.cDisc} (${esc(coupon.code)} −${coupon.percent}%)</span><span>−${fmt(discount)}</span></div>` : ""}
+    <div class="shiprow"><span>${t.ship}</span><span>${t.shipLater}</span></div>
     <div class="total"><span>${t.total}</span><span>${fmt(total)}</span></div>
     <a class="add btnlink" href="#/checkout">${t.next}</a>
   </div>`;
@@ -297,7 +315,9 @@ function viewCheckout(){
       <label class="payopt off"><input type="radio" name="payment" value="qpay" disabled> ${t.qpay} <em>${t.soon}</em></label>
 
       ${coupon ? `<div class="disc"><span>${t.cDisc} (${esc(coupon.code)} −${coupon.percent}%)</span><span>−${fmt(discount)}</span></div>` : ""}
+      <div class="shiprow"><span>${t.ship}</span><span>${t.shipLater}</span></div>
       <div class="total"><span>${t.total}</span><span>${fmt(total)}</span></div>
+      <p class="note">${t.shipNote}</p>
       <button class="add">${t.checkout}</button>
     </form></div>`;
 
@@ -344,11 +364,55 @@ async function viewDone(){
       ${row(t.bRef, ref, true)}
       ${s.bankNote ? `<p class="note" style="white-space:pre-line">${esc(s.bankNote)}</p>` : ""}
     </div>
+    <p class="note">${t.shipNote}</p>
+    <p class="note"><a class="ulink" href="#/track/${lastOrder.id}">${t.trackLink}</a></p>
     <a class="add btnlink" href="#/">${t.home}</a>
   </div>`;
   $app.querySelectorAll("[data-copy]").forEach(b => b.onclick = async () => {
     try { await navigator.clipboard.writeText(b.dataset.copy); toast(t.copied); } catch {}
   });
+}
+
+function viewTrack(prefillId){
+  const t = T[lang];
+  $app.innerHTML = `<div class="cart">
+    <h1>${t.track}</h1>
+    <p class="note" style="margin-bottom:12px">${t.trackHint}</p>
+    <form id="trackf" class="form">
+      <div class="two">
+        <label class="fl"><span>${t.orderNo}</span><input name="id" inputmode="numeric" required value="${esc(prefillId || "")}" placeholder="123"></label>
+        <label class="fl"><span>${t.fPhone}</span><input name="phone" type="tel" required value="${esc(draft.phone)}"></label>
+      </div>
+      <button class="add">${t.trackBtn}</button>
+    </form>
+    <div id="trackres"></div>
+  </div>`;
+  const form = document.getElementById("trackf");
+  form.onsubmit = async e => {
+    e.preventDefault();
+    const btn = form.querySelector("button"); btn.disabled = true;
+    try {
+      const o = await api("track", { method: "POST", body: { id: form.id.value.replace(/\D/g, ""), phone: form.phone.value } });
+      const fee = o.deliveryFee;
+      document.getElementById("trackres").innerHTML = `<div class="bankbox">
+        <div class="kv big"><span>${t.orderNo}</span><b>#${o.id}</b></div>
+        <div class="kv"><span>${t.status}</span><b class="st-${o.status}">${t.st[o.status] || o.status}</b></div>
+        <div class="kv"><span>${t.date}</span><b>${new Date(o.createdAt).toLocaleString(lang === "mn" ? "mn-MN" : "en-US")}</b></div>
+        ${o.items.map(i => `<div class="kv"><span>${esc(i.size)} × ${i.qty}</span><b>${esc(i.name)}</b><span>${fmt(i.price * i.qty)}</span></div>`).join("")}
+        ${o.discount ? `<div class="kv"><span>${t.cDisc}</span><b>${esc(o.couponCode || "")}</b><span>−${fmt(o.discount)}</span></div>` : ""}
+        <div class="kv"><span>${t.ship}</span><b>${fee == null ? t.shipLater : fmt(fee)}</b></div>
+        <div class="kv big"><span>${t.grand}</span><b>${fmt(o.total + (fee || 0))}${fee == null ? " + " + t.ship.toLowerCase() : ""}</b></div>
+      </div>
+      ${o.status === "new" ? `<p class="note">${t.payNow}</p><div class="bankbox" id="trackbank"></div>` : ""}`;
+      if (o.status === "new") {
+        const s = await api("settings").catch(() => ({}));
+        const row = (l, v) => v ? `<div class="kv"><span>${l}</span><b>${esc(v)}</b></div>` : "";
+        document.getElementById("trackbank").innerHTML = row(t.bName, s.bankName) + row(t.bAcc, s.bankAccount) + row(t.bHolder, s.bankHolder) + row(t.bRef, `${o.id} ${form.phone.value.trim()}`);
+      }
+    } catch (err) { document.getElementById("trackres").innerHTML = `<p class="note" style="color:var(--red)">${esc(err.message)}</p>`; }
+    btn.disabled = false;
+  };
+  if (prefillId && draft.phone) form.requestSubmit();
 }
 
 function viewAbout(){
@@ -360,6 +424,7 @@ async function route(){
   const h = location.hash.replace(/^#\/?/, "").split("/");
   document.documentElement.lang = lang;
   document.getElementById("aboutLink").textContent = T[lang].about;
+  document.getElementById("trackLink").textContent = T[lang].track;
   document.querySelectorAll(".lang button").forEach(b => b.classList.toggle("on", b.dataset.lang===lang));
   // Refresh the catalogue whenever the shop pages are opened, so new products and stock show up without a reload.
   if (["", "product", "cart"].includes(h[0])) {
@@ -371,6 +436,7 @@ async function route(){
   else if (h[0]==="checkout") viewCheckout();
   else if (h[0]==="done") viewDone();
   else if (h[0]==="about") viewAbout();
+  else if (h[0]==="track") viewTrack(h[1]);
   else viewHome();
   window.scrollTo(0,0);
 }

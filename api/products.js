@@ -4,7 +4,7 @@ import { sizesOf, soldOut } from "../lib/stock.js";
 
 const TYPES = ["image/png", "image/jpeg", "image/webp"];
 const MAX_IMAGE = 2 * 1024 * 1024;
-const select = { id:true, name:true, nameEn:true, price:true, sizes:true, stock:true, description:true, sold:true, imageType:true, updatedAt:true };
+const select = { id:true, name:true, nameEn:true, price:true, compareAt:true, sizes:true, stock:true, description:true, sold:true, imageType:true, updatedAt:true };
 
 // Image bytes are served separately by /api/image; the list only carries its URL.
 // `sold` is the manual flag, `soldOut` also covers stock running out.
@@ -31,6 +31,9 @@ function fields(b){
     sold: !!b.sold,
   };
   if (data.price < 0) throw new HttpError(400, "Үнэ буруу байна");
+  // Old price only makes sense above the current price; blank clears the sale.
+  data.compareAt = (b.compareAt === "" || b.compareAt == null) ? null : int(b.compareAt, "Хуучин үнэ");
+  if (data.compareAt !== null && data.compareAt <= data.price) throw new HttpError(400, "Хуучин үнэ одоогийн үнээс их байх ёстой");
   // Keep only counts for this product's sizes; blank/absent = unlimited.
   const stock = {};
   const raw = b.stock && typeof b.stock === "object" ? b.stock : {};

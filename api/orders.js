@@ -95,18 +95,26 @@ export default route({
     res.json(await prisma.order.findMany({ orderBy: { id: "desc" }, take: 500 }));
   }),
 
-  // Status change. Cancelling puts the items back into stock and is final.
+  // Status and/or delivery fee change. Cancelling puts the items back into stock and is final.
   PATCH: admin(async (req, res) => {
     const id = int(req.query.id, "id");
-    const status = body(req).status;
-    if (!STATUSES.includes(status)) throw new HttpError(400, "Төлөв буруу");
+    const b = body(req);
+    const data = {};
+    if (b.status !== undefined) {
+      if (!STATUSES.includes(b.status)) throw new HttpError(400, "Төлөв буруу");
+      data.status = b.status;
+    }
+    if (b.deliveryFee !== undefined) {
+      data.deliveryFee = (b.deliveryFee === "" || b.deliveryFee === null) ? null : int(b.deliveryFee, "Хүргэлтийн төлбөр");
+      if (data.deliveryFee < 0) throw new HttpError(400, "Хүргэлтийн төлбөр буруу");
+    }
     const o = await prisma.$transaction(async tx => {
       await tx.$queryRaw`SELECT id FROM "Order" WHERE id = ${id} FOR UPDATE`;
       const cur = await tx.order.findUnique({ where: { id } });
       if (!cur) throw new HttpError(404, "Захиалга олдсонгүй");
       if (cur.status === "cancelled") throw new HttpError(400, "Цуцалсан захиалгыг өөрчлөх боломжгүй");
-      if (status === "cancelled") await adjustStock(tx, cur.items, +1);
-      return tx.order.update({ where: { id }, data: { status } });
+      if (data.status === "cancelled") await adjustStock(tx, cur.items, +1);
+      return tx.order.update({ where: { id }, data });
     });
     res.json(o);
   }),

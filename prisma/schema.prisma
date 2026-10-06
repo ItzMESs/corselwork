@@ -12,6 +12,7 @@ model Product {
   name        String
   nameEn      String   @default("")
   price       Int
+  compareAt   Int?     // previous price, shown struck through when higher than price
   sizes       String[]
   stock       Json?    // { "S": 3, "M": 0 } — a size missing from the map has unlimited stock
   description String   @default("")
@@ -40,7 +41,8 @@ model Order {
   items      Json     // [{ id, name, size, qty, price }]
   subtotal   Int
   discount   Int      @default(0)
-  total      Int
+  total      Int      // items after discount, without delivery
+  deliveryFee Int?    // set by admin later; null = not calculated yet
   couponCode String?
 }
 
