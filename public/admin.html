@@ -37,7 +37,7 @@
   .card:hover .pic{border-color:var(--fg)}
   .card .pic svg,.card .pic img{width:80%;height:80%;object-fit:contain}
   .card.sold .pic svg,.card.sold .pic img{filter:blur(3px);opacity:.8}
-  .card.sold .pic::after{content:"SOLD OUT";position:absolute;font-size:8px;font-weight:800;color:var(--red)}
+  .card.sold .pic::after{content:"";position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;aspect-ratio:2000/830;background:url(soldout.webp) center/contain no-repeat;mix-blend-mode:multiply}
   .card .nm{font-weight:600;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .card .pr{color:var(--muted)}
   .add .pic{border:1.5px dashed var(--fg);font-size:28px;font-weight:400}
