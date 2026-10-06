@@ -55,7 +55,7 @@ export default route({
     const wanted = (Array.isArray(b.items) ? b.items : []).slice(0, 50).map(i => ({
       id: int(i.id, "Бараа"), size: str(i.size, "Хэмжээ", { max: 20 }), qty: int(i.qty, "Тоо"),
     }));
-    if (!wanted.length) throw new HttpError(400, "Сагс хоосон байна");
+    if (!wanted.length) throw new HttpError(400, "Авдар хоосон байна");
     if (wanted.some(i => i.qty < 1 || i.qty > 99)) throw new HttpError(400, "Тоо ширхэг буруу");
 
     let coupon = null;
@@ -72,7 +72,7 @@ export default route({
 
       const items = wanted.map(i => {
         const p = products.find(x => x.id === i.id);
-        if (!p) throw new HttpError(400, "Сагсанд байсан бараа устгагдсан байна");
+        if (!p) throw new HttpError(400, "Авдарт байсан бараа устгагдсан байна");
         if (p.sold) throw new HttpError(400, `"${p.name}" дууссан байна`);
         if (!sizesOf(p).includes(i.size)) throw new HttpError(400, `"${p.name}": хэмжээ буруу`);
         const item = { id: p.id, name: p.name, size: i.size, qty: i.qty, price: p.price };
