@@ -77,7 +77,13 @@
   @media (max-width:520px){.form .two{grid-template-columns:1fr}}
   .fl{display:grid;gap:4px;font-size:9px;font-weight:600}
   .form select{font:inherit;font-size:10px;padding:9px;border:1.5px solid var(--fg);background:var(--bg);color:var(--fg);width:100%}
-  .form input,.form textarea{width:100%}
+  .form input:not([type=radio]):not([type=checkbox]),.form textarea,.form select{width:100%;border-radius:0;-webkit-appearance:none;appearance:none}
+  .form select{background:var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z'/%3E%3C/svg%3E") no-repeat right 12px center;padding-right:30px}
+  .payopt input{width:18px;height:18px;flex:none;margin:0}
+  .payopt{flex-wrap:wrap}
+  /* iOS zooms into fields with text under 16px */
+  @media (max-width:700px){.form input,.form textarea,.form select,.coupon input{font-size:16px}}
+  html,body{overflow-x:clip}   /* clip (not hidden) keeps the sticky header working */
   .payopt{display:flex;gap:8px;align-items:center;padding:12px;border:1.5px solid var(--fg);font-size:10px;font-weight:600;cursor:pointer}
   .payopt input{accent-color:var(--fg)}
   .payopt.off{border-color:var(--line);color:var(--muted);cursor:not-allowed}
