@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "postinstall": "prisma generate",
-    "vercel-build": "prisma generate && prisma db push --skip-generate",
+    "vercel-build": "node scripts/build.js",
     "db:push": "prisma db push",
     "dev": "node --env-file=.env dev-server.js"
   },
