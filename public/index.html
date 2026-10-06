@@ -29,14 +29,16 @@
   main{flex:1;padding:8px 16px 40px}
 
   /* Grid */
-  .grid{display:grid;grid-template-columns:repeat(8,1fr);gap:20px 12px}
-  @media (max-width:1100px){.grid{grid-template-columns:repeat(6,1fr)}}
-  @media (max-width:700px){.grid{grid-template-columns:repeat(3,1fr);gap:16px 10px}}
-  .item{position:relative;aspect-ratio:1/1;display:grid;place-items:center}
-  .item svg,.item img{width:88%;height:88%;object-fit:contain;transition:transform .25s ease}
+  /* minmax(0,1fr): large images must not widen their column past the screen */
+  .grid{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:20px 12px}
+  @media (max-width:1100px){.grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
+  @media (max-width:700px){.grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 10px}}
+  .item{position:relative;aspect-ratio:1/1;display:grid;place-items:center;min-width:0;overflow:hidden}
+  /* Absolutely placed so Safari never sizes the cell from the image's own (large) dimensions */
+  .item svg,.item img{position:absolute;inset:6%;width:88%;height:88%;object-fit:contain;transition:transform .25s ease}
   .item:hover svg,.item:hover img{transform:scale(1.08)}
   .item.sold svg,.item.sold img{filter:blur(3px);opacity:.85}
-  .item.sold::after{content:"SOLD OUT";position:absolute;font-size:8px;font-weight:800;color:var(--red);letter-spacing:.02em;white-space:nowrap}
+  .item.sold::after{content:"SOLD OUT";position:absolute;z-index:1;font-size:8px;font-weight:800;color:var(--red);letter-spacing:.02em;white-space:nowrap}
 
   /* Product */
   .product{max-width:560px;margin:24px auto 0}
@@ -72,7 +74,7 @@
   footer{display:flex;justify-content:center;gap:24px}
   .old{color:var(--muted);font-weight:400}
   .new{color:var(--red)}
-  .salebadge{position:absolute;top:2px;right:2px;background:var(--red);color:#fff;font-size:8px;font-weight:800;padding:1px 4px}
+  .salebadge{position:absolute;z-index:1;top:0;right:0;background:var(--red);color:#fff;font-size:8px;font-weight:800;padding:1px 4px}
   .shiprow{display:flex;justify-content:space-between;font-size:10px;margin-top:12px;color:var(--muted)}
   .ulink{text-decoration:underline}
   .kv b.st-new{color:var(--red)}
