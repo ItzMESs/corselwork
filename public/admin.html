@@ -490,12 +490,71 @@ async function renderSettings(){
     <label class="t">Шинэ захиалгын мэдэгдэл хүлээн авах и-мэйл</label><input name="notifyEmail" type="email" value="${esc(s.notifyEmail)}" placeholder="${esc(s.mailFrom || "you@gmail.com")}">
     <div class="hint">Хоосон бол илгээж буй Gmail хаяг руу ирнэ.</div>
     <div class="btns" style="margin-top:14px"><button class="btn dark">Хадгалах</button></div>
+  </form>
+
+  <form class="box settings" id="af" style="margin-top:20px">
+    <h2>Бидний тухай хуудас</h2>
+    <div class="hint">Сайтын доод талын "Бидний тухай" холбоосоор нээгдэнэ. <a href="/#/about" target="_blank">Харах ↗</a></div>
+    <label class="t">Зургууд (эхнийх нь хуудасны дээд талд том харагдана, 8 хүртэл)</label>
+    <div class="gallery" id="agal"></div>
+    <label class="t">Брэндийн түүх (MN)</label>
+    <textarea name="aboutText" rows="8" maxlength="5000" placeholder="Догол мөр бүрийн хооронд хоосон мөр үлдээнэ үү">${esc(s.aboutText)}</textarea>
+    <label class="t">Брэндийн түүх (EN, заавал биш)</label>
+    <textarea name="aboutTextEn" rows="4" maxlength="5000">${esc(s.aboutTextEn)}</textarea>
+    <label class="t">Instagram</label><input name="instagram" type="url" value="${esc(s.instagram)}" placeholder="https://instagram.com/corsel">
+    <label class="t">Facebook</label><input name="facebook" type="url" value="${esc(s.facebook)}" placeholder="https://facebook.com/corsel">
+    <label class="t">TikTok</label><input name="tiktok" type="url" value="${esc(s.tiktok)}" placeholder="https://tiktok.com/@corsel">
+    <div class="two">
+      <div><label class="t">Холбоо барих утас</label><input name="contactPhone" value="${esc(s.contactPhone)}"></div>
+      <div><label class="t">Холбоо барих и-мэйл</label><input name="contactEmail" type="email" value="${esc(s.contactEmail)}"></div>
+    </div>
+    <div class="hint">Хоосон орхисон холбоос, утас, и-мэйл сайтад харагдахгүй.</div>
+    <div class="btns" style="margin-top:14px"><button class="btn dark">Хадгалах</button></div>
   </form>`;
   document.getElementById("sf").onsubmit = async e => {
     e.preventDefault();
     await call("settings", { method: "PUT", body: Object.fromEntries(new FormData(e.target)) });
     renderSettings();
     toast("Хадгалагдлаа");
+  };
+
+  // About page images: same controls as the product gallery
+  let agal = (s.aboutImages || []).map(i => ({ keep: i.ref, url: i.url }));
+  const file = document.getElementById("file");
+  const draw = () => {
+    const box = document.getElementById("agal");
+    box.innerHTML = agal.map((g, i) => `<div class="gi">
+        <img src="${esc(g.url)}" alt="">
+        ${i === 0 ? `<span class="cover">Дээд зураг</span>` : ""}
+        <div class="gb">
+          <button type="button" data-mv="${i}" data-d="-1" ${i === 0 ? "disabled" : ""} aria-label="Зүүн тийш">‹</button>
+          <button type="button" data-rm="${i}" aria-label="Устгах">✕</button>
+          <button type="button" data-mv="${i}" data-d="1" ${i === agal.length - 1 ? "disabled" : ""} aria-label="Баруун тийш">›</button>
+        </div></div>`).join("") +
+      (agal.length < 8 ? `<button type="button" class="gi addimg" id="aadd">+<small>Зураг нэмэх</small></button>` : "");
+    box.querySelectorAll("[data-mv]").forEach(b => b.onclick = () => {
+      const i = +b.dataset.mv, j = i + +b.dataset.d; [agal[i], agal[j]] = [agal[j], agal[i]]; draw();
+    });
+    box.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => { agal.splice(+b.dataset.rm, 1); draw(); });
+    const add = document.getElementById("aadd");
+    if (add) add.onclick = () => {
+      file.value = "";
+      file.onchange = async () => {
+        try { for (const f of [...file.files].slice(0, 8 - agal.length)) { const data = await shrink(f, 1400); agal.push({ data, url: data }); } draw(); }
+        catch { toast("Зургийг уншиж чадсангүй", true); }
+      };
+      file.click();
+    };
+  };
+  draw();
+  document.getElementById("af").onsubmit = async e => {
+    e.preventDefault();
+    const btn = e.target.querySelector(".btn.dark"); btn.disabled = true; btn.textContent = "Хадгалж байна…";
+    try {
+      await call("settings", { method: "PUT", body: { ...Object.fromEntries(new FormData(e.target)),
+        aboutImages: agal.map(g => g.data ? { data: g.data } : { keep: g.keep }) } });
+      toast("Хадгалагдлаа"); renderSettings();
+    } catch { btn.disabled = false; btn.textContent = "Хадгалах"; }
   };
 }
 

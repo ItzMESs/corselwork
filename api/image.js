@@ -1,11 +1,14 @@
 import { prisma } from "../lib/db.js";
 import { int, route, HttpError } from "../lib/http.js";
 
-// ?id=<product> serves the cover image, ?img=<ProductImage id> a gallery image.
+// ?id=<product> serves the cover image, ?img=<ProductImage id> a gallery image, ?site=<SiteImage id> a page image.
 export default route({
   GET: async (req, res) => {
     let data, type;
-    if (req.query.img !== undefined) {
+    if (req.query.site !== undefined) {
+      const x = await prisma.siteImage.findUnique({ where: { id: int(req.query.site, "site") }, select: { data: true, type: true } });
+      data = x?.data; type = x?.type;
+    } else if (req.query.img !== undefined) {
       const x = await prisma.productImage.findUnique({ where: { id: int(req.query.img, "img") }, select: { data: true, type: true } });
       data = x?.data; type = x?.type;
     } else {

@@ -1,9 +1,8 @@
 import { prisma } from "../lib/db.js";
 import { admin, body, int, route, str, HttpError } from "../lib/http.js";
 import { sizesOf, soldOut } from "../lib/stock.js";
+import { parseImage, parseGallery as parseList } from "../lib/images.js";
 
-const TYPES = ["image/png", "image/jpeg", "image/webp"];
-const MAX_IMAGE = 2 * 1024 * 1024;
 const MAX_IMAGES = 8;
 const select = {
   id:true, name:true, nameEn:true, price:true, compareAt:true, sizes:true, stock:true, description:true, sold:true, imageType:true, updatedAt:true,
@@ -20,14 +19,6 @@ function toPublic({ imageType, updatedAt, images, ...p }){
     ...images.map(i => ({ ref: i.id, url: `/api/image?img=${i.id}&v=${v}` })),
   ];
   return { ...p, stock: p.stock || {}, soldOut: soldOut(p), image: gallery[0]?.url || null, images: gallery };
-}
-
-function parseImage(dataUrl){
-  const m = /^data:([\w/+.-]+);base64,(.+)$/.exec(dataUrl);
-  if (!m || !TYPES.includes(m[1])) throw new HttpError(400, "Зургийн формат буруу (PNG/JPG/WEBP)");
-  const buf = Buffer.from(m[2], "base64");
-  if (buf.length > MAX_IMAGE) throw new HttpError(400, "Зураг 2MB-аас их байна");
-  return { data: buf, type: m[1] };
 }
 
 function fields(b){
@@ -60,16 +51,8 @@ function fields(b){
 //   { keep: "cover" | <ProductImage id> }  an image already stored for this product, or
 //   { data: "data:image/...;base64,..." }  a new upload.
 // Omitted (undefined) = leave the gallery as it is.
-function parseGallery(list){
-  if (list === undefined) return undefined;
-  if (!Array.isArray(list)) throw new HttpError(400, "Зургийн жагсаалт буруу");
-  if (list.length > MAX_IMAGES) throw new HttpError(400, `Хамгийн ихдээ ${MAX_IMAGES} зураг оруулна`);
-  return list.map(e => {
-    if (e && typeof e.data === "string") return parseImage(e.data);
-    if (e && (e.keep === "cover" || Number.isInteger(e.keep))) return { keep: e.keep };
-    throw new HttpError(400, "Зургийн жагсаалт буруу");
-  });
-}
+const parseGallery = list => list === undefined ? undefined
+  : parseList(list, MAX_IMAGES, k => k === "cover" || Number.isInteger(k));
 
 // Resolves kept images to their bytes, then rewrites cover + extras in the new order.
 async function saveGallery(tx, productId, gallery){

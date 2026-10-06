@@ -70,3 +70,14 @@ model Setting {
   key   String @id
   value String
 }
+
+// Images for site pages (e.g. slot "about" = the About page gallery)
+model SiteImage {
+  id       Int    @id @default(autoincrement())
+  slot     String
+  position Int
+  data     Bytes
+  type     String
+
+  @@index([slot])
+}
