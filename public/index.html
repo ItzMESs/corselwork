@@ -115,6 +115,11 @@
   .size.out{color:var(--muted);border-color:var(--line);text-decoration:line-through}
   .stockleft{color:var(--red);font-size:9px;font-weight:600;margin-top:6px}
   .btnlink{display:grid;place-items:center}
+  /* Өлзий knot ornaments: flanking a page title, and leading each checkout section */
+  .orn{display:flex;align-items:center;justify-content:center;gap:16px}
+  .orn::before,.orn::after{content:"";width:30px;height:23px;flex:none;background:currentColor;-webkit-mask:url(ulzii.png) center/contain no-repeat;mask:url(ulzii.png) center/contain no-repeat}
+  .form h2{display:flex;align-items:center;gap:10px}
+  .form h2::before{content:"";width:20px;height:15px;flex:none;background:var(--red);-webkit-mask:url(ulzii.png) center/contain no-repeat;mask:url(ulzii.png) center/contain no-repeat}
   .form h2{font-size:11px;font-weight:800;margin:18px 0 2px;padding-bottom:6px;border-bottom:1.5px solid var(--fg)}
   .form .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   @media (max-width:520px){.form .two{grid-template-columns:1fr}}
@@ -344,7 +349,7 @@ function viewCheckout(){
     `<label class="fl"><span>${label}</span><input name="${n}" type="${type}" value="${esc(d[n])}" ${extra}></label>`;
   $app.innerHTML = `<div class="cart">
     <a class="back" href="#/cart">${t.back}</a>
-    <h1>${t.order}</h1>
+    <h1 class="orn">${t.order}</h1>
     <form id="checkout" class="form">
       <h2>${t.contact}</h2>
       ${field("name", t.fName + " *", "text", 'required maxlength="100" autocomplete="name"')}
@@ -378,7 +383,7 @@ function viewCheckout(){
       <div class="shiprow"><span>${t.ship}</span><span>${t.shipLater}</span></div>
       <div class="total"><span>${t.total}</span><span>${fmt(total)}</span></div>
       <p class="note">${t.shipNote}</p>
-      <button class="add">${t.checkout}</button>
+      <button class="add addcart">${t.checkout}</button>
     </form></div>`;
 
   const form = document.getElementById("checkout");
@@ -487,7 +492,7 @@ async function route(){
   document.getElementById("trackLink").textContent = T[lang].track;
   document.querySelectorAll(".lang button").forEach(b => b.classList.toggle("on", b.dataset.lang===lang));
   // Refresh the catalogue whenever the shop pages are opened, so new products and stock show up without a reload.
-  if (["", "product", "cart"].includes(h[0])) {
+  if (["", "product", "cart", "checkout"].includes(h[0])) {
     try { await loadProducts(); }
     catch { if (!PRODUCTS.length) { $app.innerHTML = `<div class="empty">${T[lang].error}</div>`; return; } }
   }
