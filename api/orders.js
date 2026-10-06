@@ -2,6 +2,9 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../lib/db.js";
 import { admin, body, int, route, str, HttpError } from "../lib/http.js";
 import { left, sizesOf } from "../lib/stock.js";
+import { sendAll } from "../lib/mail.js";
+import { loadSettings } from "../lib/settings.js";
+import { adminNewOrder, customerPaid, customerPlaced, customerShipped, siteUrl } from "../lib/emails.js";
 
 const STATUSES = ["new", "paid", "shipped", "cancelled"];
 const PHONE = /^[0-9+ ]{8,20}$/;
@@ -65,14 +68,16 @@ export default route({
       const ids = [...new Set(wanted.map(i => i.id))];
       // Lock the rows so two simultaneous orders cannot both take the last item.
       await tx.$queryRaw`SELECT id FROM "Product" WHERE id IN (${Prisma.join(ids)}) FOR UPDATE`;
-      const products = await tx.product.findMany({ where: { id: { in: ids } }, select: { id:true, name:true, price:true, sizes:true, stock:true, sold:true } });
+      const products = await tx.product.findMany({ where: { id: { in: ids } }, select: { id:true, name:true, price:true, compareAt:true, sizes:true, stock:true, sold:true } });
 
       const items = wanted.map(i => {
         const p = products.find(x => x.id === i.id);
         if (!p) throw new HttpError(400, "Сагсанд байсан бараа устгагдсан байна");
         if (p.sold) throw new HttpError(400, `"${p.name}" дууссан байна`);
         if (!sizesOf(p).includes(i.size)) throw new HttpError(400, `"${p.name}": хэмжээ буруу`);
-        return { id: p.id, name: p.name, size: i.size, qty: i.qty, price: p.price };
+        const item = { id: p.id, name: p.name, size: i.size, qty: i.qty, price: p.price };
+        if (p.compareAt > p.price) item.was = p.compareAt;   // shown struck through in emails
+        return item;
       });
       for (const i of items) {
         const p = products.find(x => x.id === i.id);
@@ -88,6 +93,14 @@ export default route({
         ...c, payment: "bank", items, subtotal, discount, total: subtotal - discount, couponCode: coupon?.code ?? null,
       }});
     });
+
+    // Confirmation to the customer + notification to the shop owner.
+    const settings = await loadSettings().catch(() => ({}));
+    const base = siteUrl(req);
+    await sendAll([
+      customerPlaced(base, order, settings),
+      adminNewOrder(base, order, settings.notifyEmail || process.env.SMTP_USER),
+    ]);
     res.status(201).json({ id: order.id, total: order.total });
   },
 
@@ -114,7 +127,13 @@ export default route({
       if (!cur) throw new HttpError(404, "Захиалга олдсонгүй");
       if (cur.status === "cancelled") throw new HttpError(400, "Цуцалсан захиалгыг өөрчлөх боломжгүй");
       if (data.status === "cancelled") await adjustStock(tx, cur.items, +1);
-      return tx.order.update({ where: { id }, data });
+      const updated = await tx.order.update({ where: { id }, data });
+      return { updated, changed: data.status && data.status !== cur.status };
+    }).then(async ({ updated, changed }) => {
+      // Tell the customer when payment is confirmed or the order is delivered.
+      if (changed && updated.status === "paid") await sendAll([customerPaid(siteUrl(req), updated)]);
+      if (changed && updated.status === "shipped") await sendAll([customerShipped(siteUrl(req), updated)]);
+      return updated;
     });
     res.json(o);
   }),

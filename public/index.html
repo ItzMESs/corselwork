@@ -376,7 +376,7 @@ async function viewDone(){
   });
 }
 
-function viewTrack(prefillId){
+function viewTrack(prefillId, prefillPhone){
   const t = T[lang];
   $app.innerHTML = `<div class="cart">
     <h1>${t.track}</h1>
@@ -384,7 +384,7 @@ function viewTrack(prefillId){
     <form id="trackf" class="form">
       <div class="two">
         <label class="fl"><span>${t.orderNo}</span><input name="id" inputmode="numeric" required value="${esc(prefillId || "")}" placeholder="123"></label>
-        <label class="fl"><span>${t.fPhone}</span><input name="phone" type="tel" required value="${esc(draft.phone)}"></label>
+        <label class="fl"><span>${t.fPhone}</span><input name="phone" type="tel" required value="${esc(prefillPhone || draft.phone)}"></label>
       </div>
       <button class="add">${t.trackBtn}</button>
     </form>
@@ -415,7 +415,7 @@ function viewTrack(prefillId){
     } catch (err) { document.getElementById("trackres").innerHTML = `<p class="note" style="color:var(--red)">${esc(err.message)}</p>`; }
     btn.disabled = false;
   };
-  if (prefillId && draft.phone) form.requestSubmit();
+  if (prefillId && form.phone.value) form.requestSubmit();
 }
 
 function viewAbout(){
@@ -439,7 +439,7 @@ async function route(){
   else if (h[0]==="checkout") viewCheckout();
   else if (h[0]==="done") viewDone();
   else if (h[0]==="about") viewAbout();
-  else if (h[0]==="track") viewTrack(h[1]);
+  else if (h[0]==="track") viewTrack(h[1], h[2] && decodeURIComponent(h[2]));
   else viewHome();
   window.scrollTo(0,0);
 }

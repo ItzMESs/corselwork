@@ -1,25 +1,23 @@
 import { prisma } from "../lib/db.js";
+import { isAdmin } from "../lib/auth.js";
 import { admin, body, route, str } from "../lib/http.js";
-
-// Public shop settings (bank transfer details shown at checkout).
-const KEYS = ["bankName", "bankAccount", "bankHolder", "bankNote"];
-
-async function load(){
-  const rows = await prisma.setting.findMany({ where: { key: { in: KEYS } } });
-  return Object.fromEntries(KEYS.map(k => [k, rows.find(r => r.key === k)?.value || ""]));
-}
+import { fromAddress, mailReady } from "../lib/mail.js";
+import { loadSettings, PUBLIC_KEYS, SETTING_KEYS } from "../lib/settings.js";
 
 export default route({
+  // Public: bank details for checkout. Admin also gets the notification email and mail status.
   GET: async (req, res) => {
     res.setHeader("Cache-Control", "no-store");
-    res.json(await load());
+    const s = await loadSettings();
+    if (!isAdmin(req)) return res.json(Object.fromEntries(PUBLIC_KEYS.map(k => [k, s[k]])));
+    res.json({ ...s, mailReady: mailReady(), mailFrom: fromAddress() });
   },
   PUT: admin(async (req, res) => {
     const b = body(req);
-    await prisma.$transaction(KEYS.map(k => {
+    await prisma.$transaction(SETTING_KEYS.map(k => {
       const value = str(b[k], k, { max: 500 });
       return prisma.setting.upsert({ where: { key: k }, create: { key: k, value }, update: { value } });
     }));
-    res.json(await load());
+    res.json({ ...(await loadSettings()), mailReady: mailReady(), mailFrom: fromAddress() });
   }),
 });

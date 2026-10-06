@@ -344,11 +344,18 @@ async function renderSettings(){
     <label class="t">Дансны дугаар</label><input name="bankAccount" value="${esc(s.bankAccount)}">
     <label class="t">Хүлээн авагчийн нэр</label><input name="bankHolder" value="${esc(s.bankHolder)}">
     <label class="t">Нэмэлт заавар (заавал биш)</label><textarea name="bankNote" rows="3">${esc(s.bankNote)}</textarea>
+    <h2 style="margin-top:24px">И-мэйл мэдэгдэл</h2>
+    <div class="hint" style="font-size:9px;color:${s.mailReady ? "inherit" : "var(--red)"}">${s.mailReady
+      ? `✓ И-мэйл идэвхтэй. ${esc(s.mailFrom)} хаягаас илгээгдэнэ.`
+      : "✕ И-мэйл тохируулаагүй байна. Vercel дээр SMTP_USER, SMTP_PASS нэмнэ үү (README-г үзнэ үү)."}</div>
+    <label class="t">Шинэ захиалгын мэдэгдэл хүлээн авах и-мэйл</label><input name="notifyEmail" type="email" value="${esc(s.notifyEmail)}" placeholder="${esc(s.mailFrom || "you@gmail.com")}">
+    <div class="hint">Хоосон бол илгээж буй Gmail хаяг руу ирнэ.</div>
     <div class="btns" style="margin-top:14px"><button class="btn dark">Хадгалах</button></div>
   </form>`;
   document.getElementById("sf").onsubmit = async e => {
     e.preventDefault();
     await call("settings", { method: "PUT", body: Object.fromEntries(new FormData(e.target)) });
+    renderSettings();
     toast("Хадгалагдлаа");
   };
 }
