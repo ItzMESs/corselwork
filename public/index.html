@@ -157,13 +157,10 @@
   .asocial{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:32px 0 8px}
   .asocial a{display:flex;align-items:center;gap:8px;padding:10px 16px;border:1.5px solid var(--fg);font-size:10px;font-weight:700}
   .asocial a:hover{background:var(--fg);color:var(--bg)}
-  .asocial svg,.social svg{width:18px;height:18px;display:block}
+  .asocial svg{width:18px;height:18px;display:block}
   .acontact{text-align:center;margin:28px 0 10px;display:grid;gap:6px;font-size:11px}
   .acontact h2{font-size:11px;font-weight:800;margin-bottom:4px}
   .acontact a{text-decoration:underline}
-  footer .social{display:inline-flex;gap:12px;align-items:center}
-  footer .social a{border:0}
-  footer .social a:hover{color:var(--red)}
   /* About */
   .about{max-width:520px;margin:24px auto 0;font-size:10px}
   .about p{margin-bottom:14px}
@@ -194,7 +191,7 @@
 
 <main id="app"></main>
 
-<footer><a href="#/track" id="trackLink"></a><a href="#/about" id="aboutLink"></a><span class="social" id="social"></span></footer>
+<footer><a href="#/track" id="trackLink"></a><a href="#/about" id="aboutLink"></a></footer>
 <div class="toast" id="toast"></div>
 
 <script src="data.js"></script>
@@ -510,13 +507,6 @@ const SOCIAL = [["instagram", "Instagram"], ["facebook", "Facebook"], ["tiktok",
 let SITE = null;   // public settings, loaded once
 const loadSite = async () => SITE || (SITE = await api("settings").catch(() => ({ aboutImages: [] })));
 
-function renderFooterSocial(){
-  const el = document.getElementById("social");
-  if (!el || !SITE) return;
-  el.innerHTML = SOCIAL.filter(([k]) => SITE[k]).map(([k, n]) =>
-    `<a href="${esc(SITE[k])}" target="_blank" rel="noopener" aria-label="${n}">${ICONS[k]}</a>`).join("");
-}
-
 async function viewAbout(){
   const t = T[lang];
   $app.innerHTML = `<div class="empty">…</div>`;
@@ -565,7 +555,6 @@ document.querySelectorAll(".lang button").forEach(b => b.onclick = () => { lang 
 window.addEventListener("hashchange", route);
 saveCart();
 route();
-loadSite().then(renderFooterSocial);
 </script>
 
 </body>
