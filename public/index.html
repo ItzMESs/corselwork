@@ -86,9 +86,6 @@
   .thumbs button{width:52px;height:52px;border:1.5px solid transparent;padding:3px}
   .thumbs button.on{border-color:var(--fg)}
   .thumbs img{width:100%;height:100%;object-fit:contain;display:block}
-  /* Grid: show the second photo on hover (mouse devices only) */
-  .item img.alt{opacity:0;transition:opacity .25s}
-  @media (hover:hover){.item.has-alt:hover img.alt{opacity:1}.item.has-alt:hover img:not(.alt){opacity:0}}
   .back{display:inline-block;margin-bottom:12px;font-size:9px;color:var(--muted)}
 
   /* Cart */
@@ -240,7 +237,7 @@ async function loadProducts(){
 /* ---------- Views ---------- */
 function viewHome(){
   $app.innerHTML = PRODUCTS.length ? `<div class="grid">${PRODUCTS.map(p =>
-    `<a class="item${p.soldOut?" sold":""}${p.images[1]?" has-alt":""}" href="#/product/${p.id}" title="${name(p)}">${art(p)}${p.images[1] ? `<img class="alt" src="${esc(p.images[1].url)}" alt="" loading="lazy">` : ""}${onSale(p) && !p.soldOut ? `<span class="salebadge">−${Math.round((1 - p.price / p.compareAt) * 100)}%</span>` : ""}</a>`).join("")}</div>`
+    `<a class="item${p.soldOut?" sold":""}" href="#/product/${p.id}" title="${name(p)}">${art(p)}${onSale(p) && !p.soldOut ? `<span class="salebadge">−${Math.round((1 - p.price / p.compareAt) * 100)}%</span>` : ""}</a>`).join("")}</div>`
     : `<div class="empty">${T[lang].none}</div>`;
 }
 
