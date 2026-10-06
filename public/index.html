@@ -69,6 +69,13 @@
   .price{font-weight:800;font-size:12px}
   .add{margin-top:10px;width:100%;height:42px;background:var(--fg);color:var(--bg);font-size:10px;font-weight:800;letter-spacing:.06em}
   .add:disabled{background:var(--line);color:var(--red);cursor:default}
+  /* Add-to-cart: plain text between two өлзий knots; the knots take the text colour via mask */
+  .addcart{background:none;color:var(--fg);display:flex;align-items:center;justify-content:center;gap:18px;font-size:12px;height:52px}
+  .addcart::before,.addcart::after{content:"";width:34px;height:26px;flex:none;background:currentColor;-webkit-mask:url(ulzii.png) center/contain no-repeat;mask:url(ulzii.png) center/contain no-repeat;transition:transform .3s ease}
+  .addcart:hover:not(:disabled){color:var(--red)}
+  .addcart:hover:not(:disabled)::before{transform:rotate(-90deg)}
+  .addcart:hover:not(:disabled)::after{transform:rotate(90deg)}
+  .addcart:disabled{background:none;color:var(--red)}
   .back{display:inline-block;margin-bottom:12px;font-size:9px;color:var(--muted)}
 
   /* Cart */
@@ -239,7 +246,7 @@ function viewProduct(id){
       <div class="row">${sizes.map(s => `<button class="size${s===sel?" on":""}${left(p,s)<=0?" out":""}" data-s="${esc(s)}">${esc(s)}</button>`).join("")}</div>
       <div class="price">${priceHtml(p)}</div>
       ${!out && n !== Infinity && n <= 5 ? `<div class="stockleft">${t.left(n)}</div>` : ""}
-      <button class="add" ${out?"disabled":""}>${out ? t.sold : t.add}</button>
+      <button class="add addcart" ${out?"disabled":""}>${out ? t.sold : t.add}</button>
     </div>`;
     $app.querySelectorAll(".size").forEach(b => b.onclick = () => { sel = b.dataset.s; draw(); });
     $app.querySelector(".add").onclick = () => {
