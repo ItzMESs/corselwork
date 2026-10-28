@@ -388,10 +388,14 @@ function openEditor(p){
       `<label><span>${esc(s)}</span><input type="number" min="0" data-stock="${esc(s)}" value="${Number.isInteger(d.stock[s]) ? d.stock[s] : ""}" placeholder="∞"></label>`).join("");
   };
   // Size chart: height (cm) and weight (kg) per size; stored as the "a | b | c" text the shop renders.
+  // Columns are found by their header, so older charts (e.g. with a chest column) don't land in the wrong box.
   const chart = {};
-  (d.sizeChart || "").split(/\r?\n/).slice(1).forEach(line => {
-    const [sz, h = "", w = ""] = line.split(/\s*[|\t]\s*/).map(x => x.trim());
-    if (sz) chart[sz] = { h, w };
+  const [headLine = "", ...chartRows] = (d.sizeChart || "").split(/\r?\n/).filter(l => l.trim());
+  const head = headLine.split(/\s*[|\t]\s*/).map(x => x.toLowerCase());
+  const hi = head.findIndex(x => x.includes("өндөр")), wi = head.findIndex(x => x.includes("жин"));
+  chartRows.forEach(line => {
+    const cells = line.split(/\s*[|\t]\s*/).map(x => x.trim());
+    if (cells[0]) chart[cells[0]] = { h: hi > 0 ? cells[hi] || "" : "", w: wi > 0 ? cells[wi] || "" : "" };
   });
   const drawChart = () => {
     form.querySelectorAll("[data-ch]").forEach(i => { (chart[i.dataset.sz] = chart[i.dataset.sz] || { h: "", w: "" })[i.dataset.ch] = i.value.trim(); });
