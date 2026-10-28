@@ -86,6 +86,21 @@
   .thumbs button{width:52px;height:52px;border:1.5px solid transparent;padding:3px}
   .thumbs button.on{border-color:var(--fg)}
   .thumbs img{width:100%;height:100%;object-fit:contain;display:block}
+  /* Category chips */
+  .cats{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:4px 0 22px}
+  .cats a{padding:7px 14px;border:1.5px solid var(--fg);font-size:10px;font-weight:700}
+  .cats a.on{background:var(--fg);color:var(--bg)}
+  /* Size chart */
+  .chartbtn{margin-left:auto;font-size:9px;font-weight:700;text-decoration:underline;padding:4px 0}
+  .modal{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.4);display:grid;place-items:center;padding:16px}
+  .mbox{background:var(--bg);border:1.5px solid var(--fg);padding:20px;width:min(520px,100%);max-height:85vh;display:flex;flex-direction:column}
+  .mbox h2{font-size:12px;font-weight:800;margin-bottom:14px}
+  .mscroll{overflow:auto}
+  .schart{width:100%;border-collapse:collapse;font-size:10px;text-align:center}
+  .schart th{background:var(--fg);color:var(--bg);padding:8px 6px;font-weight:700}
+  .schart td{padding:8px 6px;border-bottom:1px solid var(--line)}
+  .schart td:first-child{font-weight:800}
+  .mclose{margin-top:14px;height:40px;border:1.5px solid var(--fg);font-size:10px;font-weight:800}
   .back{display:inline-block;margin-bottom:12px;font-size:9px;color:var(--muted)}
 
   /* Cart */
@@ -199,7 +214,7 @@
 /* ---------- i18n ---------- */
 const T = {
   mn:{about:"Бидний тухай",add:"АВДАРТ НЭМЭХ",sold:"ДУУССАН",cart:"Авдар",empty:"Таны авдар хоосон байна.",total:"Нийт",next:"ҮРГЭЛЖЛҮҮЛЭХ",checkout:"ЗАХИАЛАХ",back:"← Буцах",added:"Авдарт нэмэгдлээ",size:"Хэмжээ",
-      desc:"",left:n=>`${n} ширхэг үлдсэн`,noMore:"Үлдэгдэл хүрэлцэхгүй байна",
+      desc:"",left:n=>`${n} ширхэг үлдсэн`,all:"Бүгд",sizeChart:"Хэмжээний хүснэгт",close:"Хаах",noMore:"Үлдэгдэл хүрэлцэхгүй байна",
       aboutText:["CORSEL бол Улаанбаатарт төвтэй хувцасны брэнд. Бид монгол уламжлалт хээ, тамга тэмдгийг орчин үеийн гудамжны хувцастай хослуулдаг.","Цуглуулга бүр хязгаарлагдмал тоогоор үйлдвэрлэгддэг бөгөөд дахин гаргахгүй."],
       cCode:"Купон код",cApply:"Ашиглах",cDisc:"Хөнгөлөлт",cOk:"Купон ашиглагдлаа",cBad:"Купон код буруу байна",none:"Одоогоор бараа алга.",error:"Ачаалж чадсангүй. Дахин оролдоно уу.",
       order:"Захиалга",contact:"Холбоо барих",delivery:"Хүргэлтийн хаяг",pay:"Төлбөрийн хэлбэр",
@@ -213,7 +228,7 @@ const T = {
       status:"Төлөв",st:{new:"Төлбөр хүлээгдэж байна",paid:"Төлбөр орсон, бэлтгэж байна",shipped:"Хүргэгдсэн",cancelled:"Цуцлагдсан"},
       contactUs:"Холбоо барих",itemsT:"Бараа",subtotal:"Барааны дүн",grand:"Нийт төлөх",trackLink:"Захиалгаа дараа нь энд шалгаарай →",date:"Огноо"},
   en:{about:"About us",add:"ADD TO CART",sold:"SOLD OUT",cart:"Cart",empty:"Your cart is empty.",total:"Total",next:"CONTINUE",checkout:"PLACE ORDER",back:"← Back",added:"Added to cart",size:"Size",
-      desc:"",left:n=>`${n} left`,noMore:"Not enough stock",
+      desc:"",left:n=>`${n} left`,all:"All",sizeChart:"Size chart",close:"Close",noMore:"Not enough stock",
       aboutText:["CORSEL is a clothing label based in Ulaanbaatar, pairing traditional Mongolian ornament and tamga marks with contemporary streetwear.","Each collection is produced in limited numbers and never restocked."],
       cCode:"Coupon code",cApply:"Apply",cDisc:"Discount",cOk:"Coupon applied",cBad:"Invalid coupon code",none:"No products yet.",error:"Could not load. Please try again.",
       order:"Order",contact:"Contact",delivery:"Delivery address",pay:"Payment method",
@@ -257,10 +272,17 @@ async function loadProducts(){
 }
 
 /* ---------- Views ---------- */
-function viewHome(){
-  $app.innerHTML = PRODUCTS.length ? `<div class="grid">${PRODUCTS.map(p =>
+function viewHome(cat){
+  const cats = [...new Set(PRODUCTS.map(p => p.category).filter(Boolean))];
+  if (cat && !cats.includes(cat)) cat = "";
+  const list = cat ? PRODUCTS.filter(p => p.category === cat) : PRODUCTS;
+  const chips = cats.length ? `<nav class="cats">
+      <a href="#/" class="${cat ? "" : "on"}">${T[lang].all}</a>
+      ${cats.map(c => `<a href="#/cat/${encodeURIComponent(c)}" class="${c === cat ? "on" : ""}">${esc(c)}</a>`).join("")}
+    </nav>` : "";
+  $app.innerHTML = chips + (list.length ? `<div class="grid">${list.map(p =>
     `<a class="item${p.soldOut?" sold":""}" href="#/product/${p.id}" title="${name(p)}">${art(p)}${onSale(p) && !p.soldOut ? `<span class="salebadge">−${Math.round((1 - p.price / p.compareAt) * 100)}%</span>` : ""}</a>`).join("")}</div>`
-    : `<div class="empty">${T[lang].none}</div>`;
+    : `<div class="empty">${T[lang].none}</div>`);
 }
 
 function viewProduct(id){
@@ -281,12 +303,15 @@ function viewProduct(id){
       </div>
       <h1>${name(p)}</h1>
       ${p.description ? `<p style="white-space:pre-line">${esc(p.description)}</p>` : ""}
-      <div class="row">${sizes.map(s => `<button class="size${s===sel?" on":""}${left(p,s)<=0?" out":""}" data-s="${esc(s)}">${esc(s)}</button>`).join("")}</div>
+      <div class="row">${sizes.map(s => `<button class="size${s===sel?" on":""}${left(p,s)<=0?" out":""}" data-s="${esc(s)}">${esc(s)}</button>`).join("")}
+        ${p.sizeChart ? `<button class="chartbtn" id="chartbtn">📏 ${t.sizeChart}</button>` : ""}</div>
       <div class="price">${priceHtml(p)}</div>
       ${!out && n !== Infinity && n <= 5 ? `<div class="stockleft">${t.left(n)}</div>` : ""}
       <button class="add addcart" ${out?"disabled":""}>${out ? t.sold : t.add}</button>
     </div>`;
     $app.querySelectorAll(".size").forEach(b => b.onclick = () => { sel = b.dataset.s; draw(); });
+    const cb = document.getElementById("chartbtn");
+    if (cb) cb.onclick = () => showSizeChart(p);
     if (imgs.length > 1) {
       const show = i => {
         gi = (i + imgs.length) % imgs.length;
@@ -313,6 +338,28 @@ function viewProduct(id){
     };
   };
   draw();
+}
+
+// Size chart text: one row per line, cells separated by "|" (or tabs); the first row is the header.
+function showSizeChart(p){
+  const t = T[lang];
+  const rows = p.sizeChart.split(/\r?\n/).map(l => l.trim()).filter(Boolean).map(l => l.split(/\s*[|\t]\s*/));
+  const [head, ...body] = rows;
+  const m = document.createElement("div");
+  m.className = "modal";
+  m.innerHTML = `<div class="mbox" role="dialog" aria-label="${t.sizeChart}">
+      <h2 class="orn">${t.sizeChart}</h2>
+      <div class="mscroll"><table class="schart">
+        <thead><tr>${head.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead>
+        <tbody>${body.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody>
+      </table></div>
+      <button class="mclose">${t.close}</button>
+    </div>`;
+  const close = () => { m.remove(); document.removeEventListener("keydown", esc_); };
+  const esc_ = e => { if (e.key === "Escape") close(); };
+  m.onclick = e => { if (e.target === m || e.target.classList.contains("mclose")) close(); };
+  document.addEventListener("keydown", esc_);
+  document.body.appendChild(m);
 }
 
 function totals(){
@@ -538,7 +585,7 @@ async function route(){
   document.getElementById("trackLink").textContent = T[lang].track;
   document.querySelectorAll(".lang button").forEach(b => b.classList.toggle("on", b.dataset.lang===lang));
   // Refresh the catalogue whenever the shop pages are opened, so new products and stock show up without a reload.
-  if (["", "product", "cart", "checkout"].includes(h[0])) {
+  if (["", "product", "cart", "checkout", "cat"].includes(h[0])) {
     try { await loadProducts(); }
     catch { if (!PRODUCTS.length) { $app.innerHTML = `<div class="empty">${T[lang].error}</div>`; return; } }
   }
@@ -548,6 +595,7 @@ async function route(){
   else if (h[0]==="done") viewDone();
   else if (h[0]==="about") viewAbout();
   else if (h[0]==="track") viewTrack(h[1], h[2] && decodeURIComponent(h[2]));
+  else if (h[0]==="cat") viewHome(decodeURIComponent(h[1] || ""));
   else viewHome();
   window.scrollTo(0,0);
 }

@@ -16,6 +16,9 @@ model Product {
   sizes       String[]
   stock       Json?    // { "S": 3, "M": 0 } — a size missing from the map has unlimited stock
   description String   @default("")
+  category    String   @default("")
+  sizeChart   String   @default("") // one row per line, cells separated by | ; first row = header
+  sortOrder   Int      @default(0)  // shop order, smallest first
   sold        Boolean  @default(false)
   image       Bytes?   // cover image (first in the gallery)
   imageType   String?

@@ -199,6 +199,15 @@
     .ctable td{border:0;padding:3px 6px}
     .ctable tr.sub{display:block}
   }
+  .ofilter button span{font-weight:400;opacity:.7;margin-left:2px}
+  .sorting .card{cursor:grab}
+  .sorting .card.dragging{opacity:.35}
+  .sorting .card.over .pic{border-color:var(--red);border-style:dashed}
+  .card .pos{position:absolute;top:0;left:0;background:var(--fg);color:var(--bg);font-size:8px;font-weight:800;padding:2px 6px}
+  .card .mv{display:flex;justify-content:center;gap:6px;margin-top:4px}
+  .card .mv button{width:32px;height:26px;border:1.5px solid var(--fg);font-size:13px;line-height:1}
+  .card .mv button:disabled{opacity:.2;cursor:default}
+  .linkbtn{font-size:8px;font-weight:600;text-decoration:underline;color:var(--muted);margin-left:6px}
   .empty{padding:60px 0;text-align:center;color:var(--muted)}
 
   .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--fg);color:var(--bg);padding:10px 16px;font-size:9px;font-weight:600;transition:.25s;pointer-events:none;z-index:30}
@@ -274,19 +283,55 @@ document.getElementById("login").onsubmit = async e => {
 document.getElementById("logout").onclick = async () => { await api("login", { method: "DELETE" }).catch(() => {}); showLogin(); };
 
 /* ---------- Бараа ---------- */
+let sorting = null;   // working copy of the product order while "Дараалал солих" is on
+
 function renderProducts(){
-  $app.innerHTML = `<div class="grid">
-    <div class="card add" id="new"><div class="pic">+</div><div class="nm">Бараа нэмэх</div></div>
-    ${products.map(p => `
-      <div class="card${p.soldOut ? " sold" : ""}" data-id="${p.id}">
-        <div class="pic">${art(p)}</div>
+  const card = (p, i) => `
+      <div class="card${p.soldOut ? " sold" : ""}" data-id="${p.id}" ${sorting ? `draggable="true" data-i="${i}"` : ""}>
+        <div class="pic">${art(p)}${sorting ? `<span class="pos">${i + 1}</span>` : ""}</div>
         <div class="nm">${esc(p.name)}</div>
-        <div class="pr">${p.compareAt > p.price ? `<s>${fmt(p.compareAt)}</s> <span style="color:var(--red)">${fmt(p.price)}</span>` : fmt(p.price)}</div>
-        <div class="pr">${stockLabel(p)}</div>
-      </div>`).join("")}
-  </div>`;
-  document.getElementById("new").onclick = () => openEditor(null);
-  $app.querySelectorAll("[data-id]").forEach(c => c.onclick = () => openEditor(products.find(p => p.id == c.dataset.id)));
+        ${sorting ? `<div class="mv">
+            <button type="button" data-mv="${i}" data-d="-1" ${i === 0 ? "disabled" : ""} aria-label="Урагш">‹</button>
+            <button type="button" data-mv="${i}" data-d="1" ${i === sorting.length - 1 ? "disabled" : ""} aria-label="Хойш">›</button>
+          </div>` : `<div class="pr">${p.compareAt > p.price ? `<s>${fmt(p.compareAt)}</s> <span style="color:var(--red)">${fmt(p.price)}</span>` : fmt(p.price)}</div>
+          <div class="pr">${stockLabel(p)}${p.category ? ` · ${esc(p.category)}` : ""}</div>`}
+      </div>`;
+  const list = sorting || products;
+  $app.innerHTML = `
+    <div class="toolbar">
+      ${sorting
+        ? `<span class="hint" style="flex:1;font-size:10px;margin:0;align-self:center">Барааг чирж эсвэл ‹ › товчоор зөөнө. Дэлгүүрт энэ дарааллаар харагдана.</span>
+           <button class="btn" id="sortcancel" style="flex:none;padding:0 14px">Болих</button>
+           <button class="btn dark" id="sortsave" style="flex:none;padding:0 18px">Дарааллыг хадгалах</button>`
+        : `<span style="flex:1"></span><button class="btn" id="sortstart" style="flex:none;padding:0 14px" ${products.length < 2 ? "disabled" : ""}>↕ Дараалал солих</button>`}
+    </div>
+    <div class="grid${sorting ? " sorting" : ""}">
+      ${sorting ? "" : `<div class="card add" id="new"><div class="pic">+</div><div class="nm">Бараа нэмэх</div></div>`}
+      ${list.map(card).join("")}
+    </div>`;
+
+  if (!sorting) {
+    document.getElementById("new").onclick = () => openEditor(null);
+    $app.querySelectorAll("[data-id]").forEach(c => c.onclick = () => openEditor(products.find(p => p.id == c.dataset.id)));
+    document.getElementById("sortstart").onclick = () => { sorting = [...products]; renderProducts(); };
+    return;
+  }
+  const move = (i, j) => { if (j < 0 || j >= sorting.length || i === j) return; const [x] = sorting.splice(i, 1); sorting.splice(j, 0, x); renderProducts(); };
+  $app.querySelectorAll("[data-mv]").forEach(b => b.onclick = () => move(+b.dataset.mv, +b.dataset.mv + +b.dataset.d));
+  // Drag & drop (mouse); the arrows cover touch screens.
+  let from = null;
+  $app.querySelectorAll(".sorting [data-i]").forEach(c => {
+    c.ondragstart = e => { from = +c.dataset.i; c.classList.add("dragging"); e.dataTransfer.effectAllowed = "move"; };
+    c.ondragend = () => c.classList.remove("dragging");
+    c.ondragover = e => { e.preventDefault(); c.classList.add("over"); };
+    c.ondragleave = () => c.classList.remove("over");
+    c.ondrop = e => { e.preventDefault(); move(from, +c.dataset.i); };
+  });
+  document.getElementById("sortcancel").onclick = () => { sorting = null; renderProducts(); };
+  document.getElementById("sortsave").onclick = async () => {
+    await call("products", { method: "PATCH", body: { order: sorting.map(p => p.id) } });
+    products = sorting; sorting = null; renderProducts(); toast("Дараалал хадгалагдлаа");
+  };
 }
 
 const sizesOf = p => p.sizes.length ? p.sizes : ["OS"];
@@ -315,6 +360,12 @@ function openEditor(p){
     <label class="t">Үлдэгдэл (хоосон орхивол хязгааргүй)</label>
     <div class="stockbox" id="stockbox"></div>
     <label class="t">Тайлбар</label><textarea name="description" rows="3">${esc(d.description)}</textarea>
+    <label class="t">Ангилал</label>
+    <input name="category" list="catlist" maxlength="40" value="${esc(d.category || "")}" placeholder="Цамц, Өмд, Малгай…">
+    <datalist id="catlist">${[...new Set(products.map(p => p.category).filter(Boolean))].map(c => `<option value="${esc(c)}">`).join("")}</datalist>
+    <label class="t">Хэмжээний хүснэгт <button type="button" class="linkbtn" id="chartex">жишээ оруулах</button></label>
+    <textarea name="sizeChart" rows="5" maxlength="3000" placeholder="Мөр бүрт нэг хэмжээ, нүдийг | тэмдгээр тусгаарлана">${esc(d.sizeChart || "")}</textarea>
+    <div class="hint">Эхний мөр нь гарчиг. Хоосон бол дэлгүүрт "Хэмжээний хүснэгт" товч гарахгүй.</div>
     <label class="check"><input type="checkbox" name="sold" ${d.sold ? "checked" : ""}> Гараар дуусгах (SOLD OUT)</label>
     <div class="hint">Бүх хэмжээний үлдэгдэл 0 болоход автоматаар SOLD OUT болно.</div>
     <div class="btns">
@@ -334,6 +385,12 @@ function openEditor(p){
   };
   drawStock();
   form.sizes.oninput = drawStock;
+  document.getElementById("chartex").onclick = () => {
+    if (form.sizeChart.value.trim() && !confirm("Одоогийн хүснэгтийг жишээгээр солих уу?")) return;
+    const sz = form.sizes.value.split(",").map(x => x.trim()).filter(Boolean);
+    form.sizeChart.value = ["Хэмжээ | Өндөр (см) | Цээж (см) | Урт (см)",
+      ...(sz.length ? sz : ["S", "M", "L", "XL"]).map(x => `${x} |  |  | `)].join("\n");
+  };
   document.getElementById("x").onclick = closeEditor;
   const drawGallery = () => {
     const box = document.getElementById("gallery");
@@ -375,6 +432,7 @@ function openEditor(p){
     e.preventDefault();
     const btn = form.querySelector(".btn.dark"); btn.disabled = true; btn.textContent = "Хадгалж байна…";
     const payload = {
+      category: form.category.value.trim(), sizeChart: form.sizeChart.value,
       name: form.name.value, nameEn: d.nameEn, price: +form.price.value, compareAt: form.compareAt.value,
       sizes: form.sizes.value.split(",").map(s => s.trim()).filter(Boolean),
       description: form.description.value, sold: form.sold.checked,
@@ -411,8 +469,24 @@ function shrink(file, max){
 
 /* ---------- Захиалга ---------- */
 const STATUS = { new:"Шинэ", paid:"Төлбөр орсон", shipped:"Хүргэсэн", cancelled:"Цуцалсан" };
+let orderQuery = "", orderStatus = "all";
+
 function renderOrders(){
-  $app.innerHTML = orders.length ? orders.map(o => {
+  const q = orderQuery.trim().toLowerCase(), qd = q.replace(/\D/g, "");
+  const match = o => !q
+    || String(o.id) === q.replace(/^#/, "")
+    || [o.name, o.email, o.address, o.adminNote, o.city, o.district].some(v => String(v || "").toLowerCase().includes(q))
+    || (qd.length >= 3 && [o.phone, o.phone2].some(v => String(v || "").replace(/\D/g, "").includes(qd)))
+    || o.items.some(i => i.name.toLowerCase().includes(q));
+  const found = orders.filter(match);
+  const shown = orderStatus === "all" ? found : found.filter(o => o.status === orderStatus);
+  const count = st => found.filter(o => st === "all" || o.status === st).length;
+  const chip = (st, label) => `<button data-of="${st}" class="${orderStatus === st ? "on" : ""}">${label} <span>${count(st)}</span></button>`;
+  const head = `<div class="toolbar">
+      <input id="oq" placeholder="Дугаар, нэр, утас, и-мэйл, бараагаар хайх…" value="${esc(orderQuery)}">
+    </div>
+    <div class="ranges ofilter">${chip("all", "Бүгд")}${Object.entries(STATUS).map(([k, v]) => chip(k, v)).join("")}</div>`;
+  $app.innerHTML = head + (shown.length ? shown.map(o => {
     const addr = [o.city, o.district, o.khoroo && o.khoroo + " хороо/баг", o.building, o.apartment && o.apartment + " тоот"].filter(Boolean).join(", ");
     return `<div class="order st-${o.status}">
       <div class="otop"><b>#${o.id}</b><span>${new Date(o.createdAt).toLocaleString("mn-MN")}</span>
@@ -442,7 +516,10 @@ function renderOrders(){
         <button class="x" data-del="${o.id}">Устгах</button>
       </div>
     </div>`;
-  }).join("") : `<div class="empty">Захиалга алга</div>`;
+  }).join("") : `<div class="empty">${orders.length ? "Олдсонгүй" : "Захиалга алга"}</div>`);
+  const oq = document.getElementById("oq");
+  oq.oninput = () => { orderQuery = oq.value; renderOrders(); const n = document.getElementById("oq"); n.focus(); n.setSelectionRange(n.value.length, n.value.length); };
+  $app.querySelectorAll("[data-of]").forEach(b => b.onclick = () => { orderStatus = b.dataset.of; renderOrders(); });
   $app.querySelectorAll("[data-st]").forEach(sel => sel.onchange = async () => {
     const o = orders.find(x => x.id == sel.dataset.st);
     if (sel.value === "cancelled" && !confirm("Захиалгыг цуцлах уу? Бараа үлдэгдэлд буцаж нэмэгдэнэ. Цуцалсны дараа өөрчлөх боломжгүй.")) { sel.value = o.status; return; }
@@ -763,8 +840,8 @@ function renderDashboard(){
     <div class="tiles">
       <button class="tile" data-go="orders"><span>Орлого · ${esc(label)}</span><b>${fmt(sum(rangeEarned))}</b><small>${rangeEarned.length} төлөгдсөн · дундаж ${fmt(avg)}</small></button>
       <button class="tile" data-go="orders"><span>Захиалга · ${esc(label)}</span><b>${rangeLive.length}</b><small>Нийт ${live.length} захиалга</small></button>
-      <button class="tile${waiting.length ? " alert" : ""}" data-go="orders"><span>Төлбөр хүлээгдэж буй</span><b>${waiting.length}</b><small>${fmt(sum(waiting))}</small></button>
-      <button class="tile${toShip.length ? " alert" : ""}" data-go="orders"><span>Илгээх ёстой</span><b>${toShip.length}</b><small>Төлбөр орсон, хүргээгүй</small></button>
+      <button class="tile${waiting.length ? " alert" : ""}" data-go="orders" data-of="new"><span>Төлбөр хүлээгдэж буй</span><b>${waiting.length}</b><small>${fmt(sum(waiting))}</small></button>
+      <button class="tile${toShip.length ? " alert" : ""}" data-go="orders" data-of="paid"><span>Илгээх ёстой</span><b>${toShip.length}</b><small>Төлбөр орсон, хүргээгүй</small></button>
     </div>
 
     <div class="panel">
@@ -802,7 +879,7 @@ function renderDashboard(){
   const setCustom = () => { dashRange = { key: "custom", from: document.getElementById("rf").value, to: document.getElementById("rt").value }; renderDashboard(); };
   document.getElementById("rf").onchange = setCustom;
   document.getElementById("rt").onchange = setCustom;
-  $app.querySelectorAll("[data-go]").forEach(b => b.onclick = () => { tab = b.dataset.go; render(); });
+  $app.querySelectorAll("[data-go]").forEach(b => b.onclick = () => { if (b.dataset.go === "orders") { orderStatus = b.dataset.of || "all"; orderQuery = ""; } tab = b.dataset.go; render(); });
   $app.querySelectorAll("[data-edit]").forEach(b => b.onclick = () => openEditor(products.find(p => p.id == b.dataset.edit)));
 }
 

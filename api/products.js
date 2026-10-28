@@ -5,7 +5,7 @@ import { parseImage, parseGallery as parseList } from "../lib/images.js";
 
 const MAX_IMAGES = 8;
 const select = {
-  id:true, name:true, nameEn:true, price:true, compareAt:true, sizes:true, stock:true, description:true, sold:true, imageType:true, updatedAt:true,
+  id:true, name:true, nameEn:true, price:true, compareAt:true, sizes:true, stock:true, description:true, category:true, sizeChart:true, sortOrder:true, sold:true, imageType:true, updatedAt:true,
   images: { select: { id:true }, orderBy: { position: "asc" } },
 };
 
@@ -28,6 +28,8 @@ function fields(b){
     price: int(b.price, "Үнэ"),
     sizes: [...new Set((Array.isArray(b.sizes) ? b.sizes : []).map(s => str(s, "Хэмжээ", { max: 20 })).filter(Boolean))].slice(0, 20),
     description: str(b.description, "Тайлбар", { max: 3000 }),
+    category: str(b.category, "Ангилал", { max: 40 }),
+    sizeChart: str(b.sizeChart, "Хэмжээний хүснэгт", { max: 3000 }),
     sold: !!b.sold,
   };
   if (data.price < 0) throw new HttpError(400, "Үнэ буруу байна");
@@ -84,7 +86,7 @@ function legacyGallery(b){
 
 export default route({
   GET: async (req, res) => {
-    const list = await prisma.product.findMany({ select, orderBy: { id: "desc" } });
+    const list = await prisma.product.findMany({ select, orderBy: [{ sortOrder: "asc" }, { id: "desc" }] });
     res.setHeader("Cache-Control", "no-store");
     res.json(list.map(toPublic));
   },
@@ -92,7 +94,9 @@ export default route({
     const b = body(req), data = fields(b), gallery = legacyGallery(b);
     if (gallery?.some(g => g.keep)) throw new HttpError(400, "Зургийн жагсаалт буруу");
     const p = await prisma.$transaction(async tx => {
-      const created = await tx.product.create({ data, select: { id: true } });
+      // New products go to the top of the shop.
+      const first = await tx.product.findFirst({ orderBy: { sortOrder: "asc" }, select: { sortOrder: true } });
+      const created = await tx.product.create({ data: { ...data, sortOrder: (first?.sortOrder ?? 1) - 1 }, select: { id: true } });
       if (gallery?.length) await saveGallery(tx, created.id, gallery);
       return tx.product.findUnique({ where: { id: created.id }, select });
     }, { timeout: 20000 });
@@ -109,6 +113,14 @@ export default route({
       return tx.product.findUnique({ where: { id }, select });
     }, { timeout: 20000 });
     res.json(toPublic(p));
+  }),
+  // Shop order: body { order: [id, id, ...] } — the full list, first shown first.
+  PATCH: admin(async (req, res) => {
+    const order = body(req).order;
+    if (!Array.isArray(order) || !order.every(Number.isInteger) || new Set(order).size !== order.length)
+      throw new HttpError(400, "Дарааллын жагсаалт буруу");
+    await prisma.$transaction(order.map((id, i) => prisma.product.updateMany({ where: { id }, data: { sortOrder: i } })));
+    res.json({ ok: true });
   }),
   DELETE: admin(async (req, res) => {
     await prisma.product.deleteMany({ where: { id: int(req.query.id, "id") } });
