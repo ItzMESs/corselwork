@@ -344,7 +344,10 @@ function viewProduct(id){
 function showSizeChart(p){
   const t = T[lang];
   const rows = p.sizeChart.split(/\r?\n/).map(l => l.trim()).filter(Boolean).map(l => l.split(/\s*[|\t]\s*/));
-  const [head, ...body] = rows;
+  // Only size, height and weight are shown; other columns from older charts (chest, length…) are dropped.
+  const keep = rows[0].map((h, i) => i === 0 || /өндөр|жин|height|weight/i.test(h));
+  const cols = keep.some((k, i) => k && i > 0) ? rows.map(r => r.filter((_, i) => keep[i])) : rows;
+  const [head, ...body] = cols;
   const m = document.createElement("div");
   m.className = "modal";
   m.innerHTML = `<div class="mbox" role="dialog" aria-label="${t.sizeChart}">
