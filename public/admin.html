@@ -207,6 +207,10 @@
   .card .mv{display:flex;justify-content:center;gap:6px;margin-top:4px}
   .card .mv button{width:32px;height:26px;border:1.5px solid var(--fg);font-size:13px;line-height:1}
   .card .mv button:disabled{opacity:.2;cursor:default}
+  .chartbox{display:grid;grid-template-columns:52px 1fr 1fr;gap:6px;align-items:center}
+  .chartbox span{font-size:8px;font-weight:600;color:var(--muted)}
+  .chartbox b{font-size:10px}
+  .chartbox input{padding:7px}
   .linkbtn{font-size:8px;font-weight:600;text-decoration:underline;color:var(--muted);margin-left:6px}
   .empty{padding:60px 0;text-align:center;color:var(--muted)}
 
@@ -363,9 +367,9 @@ function openEditor(p){
     <label class="t">Ангилал</label>
     <input name="category" list="catlist" maxlength="40" value="${esc(d.category || "")}" placeholder="Цамц, Өмд, Малгай…">
     <datalist id="catlist">${[...new Set(products.map(p => p.category).filter(Boolean))].map(c => `<option value="${esc(c)}">`).join("")}</datalist>
-    <label class="t">Хэмжээний хүснэгт <button type="button" class="linkbtn" id="chartex">жишээ оруулах</button></label>
-    <textarea name="sizeChart" rows="5" maxlength="3000" placeholder="Мөр бүрт нэг хэмжээ, нүдийг | тэмдгээр тусгаарлана">${esc(d.sizeChart || "")}</textarea>
-    <div class="hint">Эхний мөр нь гарчиг. Хоосон бол дэлгүүрт "Хэмжээний хүснэгт" товч гарахгүй.</div>
+    <label class="t">Хэмжээний хүснэгт</label>
+    <div class="chartbox" id="chartbox"></div>
+    <div class="hint">Жишээ нь өндөр 160-165, жин 50-60. Бүгд хоосон бол дэлгүүрт "Хэмжээний хүснэгт" товч гарахгүй.</div>
     <label class="check"><input type="checkbox" name="sold" ${d.sold ? "checked" : ""}> Гараар дуусгах (SOLD OUT)</label>
     <div class="hint">Бүх хэмжээний үлдэгдэл 0 болоход автоматаар SOLD OUT болно.</div>
     <div class="btns">
@@ -383,14 +387,26 @@ function openEditor(p){
     document.getElementById("stockbox").innerHTML = sizeList().map(s =>
       `<label><span>${esc(s)}</span><input type="number" min="0" data-stock="${esc(s)}" value="${Number.isInteger(d.stock[s]) ? d.stock[s] : ""}" placeholder="∞"></label>`).join("");
   };
-  drawStock();
-  form.sizes.oninput = drawStock;
-  document.getElementById("chartex").onclick = () => {
-    if (form.sizeChart.value.trim() && !confirm("Одоогийн хүснэгтийг жишээгээр солих уу?")) return;
-    const sz = form.sizes.value.split(",").map(x => x.trim()).filter(Boolean);
-    form.sizeChart.value = ["Хэмжээ | Өндөр (см) | Цээж (см) | Урт (см)",
-      ...(sz.length ? sz : ["S", "M", "L", "XL"]).map(x => `${x} |  |  | `)].join("\n");
+  // Size chart: height (cm) and weight (kg) per size; stored as the "a | b | c" text the shop renders.
+  const chart = {};
+  (d.sizeChart || "").split(/\r?\n/).slice(1).forEach(line => {
+    const [sz, h = "", w = ""] = line.split(/\s*[|\t]\s*/).map(x => x.trim());
+    if (sz) chart[sz] = { h, w };
+  });
+  const drawChart = () => {
+    form.querySelectorAll("[data-ch]").forEach(i => { (chart[i.dataset.sz] = chart[i.dataset.sz] || { h: "", w: "" })[i.dataset.ch] = i.value.trim(); });
+    document.getElementById("chartbox").innerHTML = `<span></span><span>Өндөр (см)</span><span>Жин (кг)</span>` +
+      sizeList().map(sz => `<b>${esc(sz)}</b>
+        <input data-sz="${esc(sz)}" data-ch="h" value="${esc(chart[sz]?.h || "")}" placeholder="160-165" maxlength="20">
+        <input data-sz="${esc(sz)}" data-ch="w" value="${esc(chart[sz]?.w || "")}" placeholder="50-60" maxlength="20">`).join("");
   };
+  const chartText = () => {
+    drawChart();
+    const rows = sizeList().map(sz => [sz, chart[sz]?.h || "", chart[sz]?.w || ""]).filter(r => r[1] || r[2]);
+    return rows.length ? ["Хэмжээ | Өндөр (см) | Жин (кг)", ...rows.map(r => r.join(" | "))].join("\n") : "";
+  };
+  drawStock(); drawChart();
+  form.sizes.oninput = () => { drawStock(); drawChart(); };
   document.getElementById("x").onclick = closeEditor;
   const drawGallery = () => {
     const box = document.getElementById("gallery");
@@ -432,7 +448,7 @@ function openEditor(p){
     e.preventDefault();
     const btn = form.querySelector(".btn.dark"); btn.disabled = true; btn.textContent = "Хадгалж байна…";
     const payload = {
-      category: form.category.value.trim(), sizeChart: form.sizeChart.value,
+      category: form.category.value.trim(), sizeChart: chartText(),
       name: form.name.value, nameEn: d.nameEn, price: +form.price.value, compareAt: form.compareAt.value,
       sizes: form.sizes.value.split(",").map(s => s.trim()).filter(Boolean),
       description: form.description.value, sold: form.sold.checked,
